@@ -53,6 +53,8 @@ export type ChatProps = {
   // Image attachments
   attachments?: ChatAttachment[];
   onAttachmentsChange?: (attachments: ChatAttachment[]) => void;
+  rememberUploads?: boolean;
+  onRememberUploadsChange?: (next: boolean) => void;
   // Scroll control
   showNewMessages?: boolean;
   onScrollToBottom?: () => void;
@@ -120,6 +122,8 @@ function handlePaste(e: ClipboardEvent, props: ChatProps) {
     return;
   }
 
+  let next = [...(props.attachments ?? [])];
+
   const imageItems: DataTransferItem[] = [];
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
@@ -149,8 +153,8 @@ function handlePaste(e: ClipboardEvent, props: ChatProps) {
         mimeType: file.type || "application/octet-stream",
         fileName: file.name || undefined,
       };
-      const current = props.attachments ?? [];
-      props.onAttachmentsChange?.([...current, newAttachment]);
+      next = [...next, newAttachment];
+      props.onAttachmentsChange?.(next);
     });
     reader.readAsDataURL(file);
   }
@@ -167,6 +171,7 @@ function handleFileSelect(e: Event, props: ChatProps) {
   if (files.length === 0) {
     return;
   }
+  let next = [...(props.attachments ?? [])];
   for (const file of files) {
     if (file.size > MAX_UPLOAD_BYTES) {
       console.warn(`Skipping ${file.name}: exceeds ${MAX_UPLOAD_BYTES} bytes`);
@@ -181,8 +186,8 @@ function handleFileSelect(e: Event, props: ChatProps) {
         mimeType: file.type || "application/octet-stream",
         fileName: file.name || undefined,
       };
-      const current = props.attachments ?? [];
-      props.onAttachmentsChange?.([...current, newAttachment]);
+      next = [...next, newAttachment];
+      props.onAttachmentsChange?.(next);
     });
     reader.readAsDataURL(file);
   }
@@ -194,44 +199,48 @@ function renderAttachmentPreview(props: ChatProps) {
   if (attachments.length === 0) {
     return nothing;
   }
+  const label = attachments.length === 1 ? "Attachment" : "Attachments";
 
   return html`
     <div class="chat-attachments">
-      ${attachments.map(
-        (att) => html`
-          <div class="chat-attachment">
-            ${
-              isImageAttachment(att)
-                ? html`
-                    <img
-                      src=${att.dataUrl}
-                      alt="Attachment preview"
-                      class="chat-attachment__img"
-                    />
-                  `
-                : html`
-                    <div class="chat-attachment__file">
-                      <span class="chat-attachment__icon">${icons.fileText}</span>
-                      <span class="chat-attachment__name">
-                        ${att.fileName || "Attachment"}
-                      </span>
-                    </div>
-                  `
-            }
-            <button
-              class="chat-attachment__remove"
-              type="button"
-              aria-label="Remove attachment"
-              @click=${() => {
-                const next = (props.attachments ?? []).filter((a) => a.id !== att.id);
-                props.onAttachmentsChange?.(next);
-              }}
-            >
-              ${icons.x}
-            </button>
-          </div>
-        `,
-      )}
+      <div class="chat-attachments__title">${label} (${attachments.length})</div>
+      <div class="chat-attachments__list">
+        ${attachments.map(
+          (att) => html`
+            <div class="chat-attachment">
+              ${
+                isImageAttachment(att)
+                  ? html`
+                      <img
+                        src=${att.dataUrl}
+                        alt="Attachment preview"
+                        class="chat-attachment__img"
+                      />
+                    `
+                  : html`
+                      <div class="chat-attachment__file">
+                        <span class="chat-attachment__icon">${icons.fileText}</span>
+                        <span class="chat-attachment__name">
+                          ${att.fileName || "Attachment"}
+                        </span>
+                      </div>
+                    `
+              }
+              <button
+                class="chat-attachment__remove"
+                type="button"
+                aria-label="Remove attachment"
+                @click=${() => {
+                  const next = (props.attachments ?? []).filter((a) => a.id !== att.id);
+                  props.onAttachmentsChange?.(next);
+                }}
+              >
+                ${icons.x}
+              </button>
+            </div>
+          `,
+        )}
+      </div>
     </div>
   `;
 }
@@ -249,6 +258,7 @@ export function renderChat(props: ChatProps) {
   };
 
   const hasAttachments = (props.attachments?.length ?? 0) > 0;
+  const rememberUploads = props.rememberUploads ?? true;
   const composePlaceholder = props.connected
     ? hasAttachments
       ? "Add a message or attach more files..."
@@ -460,6 +470,18 @@ export function renderChat(props: ChatProps) {
               @change=${(e: Event) => handleFileSelect(e, props)}
               hidden
             />
+            <label class="chat-compose__toggle">
+              <input
+                type="checkbox"
+                .checked=${rememberUploads}
+                ?disabled=${!props.connected}
+                @change=${(e: Event) => {
+                  const target = e.target as HTMLInputElement;
+                  props.onRememberUploadsChange?.(target.checked);
+                }}
+              />
+              <span>Remember uploads</span>
+            </label>
             <button
               class="btn"
               ?disabled=${!props.connected}

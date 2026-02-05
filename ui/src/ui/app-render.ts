@@ -969,6 +969,8 @@ export function renderApp(state: AppViewState) {
                 onDraftChange: (next) => (state.chatMessage = next),
                 attachments: state.chatAttachments,
                 onAttachmentsChange: (next) => (state.chatAttachments = next),
+                rememberUploads: state.chatRememberUploads,
+                onRememberUploadsChange: (next) => (state.chatRememberUploads = next),
                 onSend: () => (state as unknown as OpenClawApp).handleSendChat(),
                 canAbort: Boolean(state.chatRunId),
                 onAbort: () => void (state as unknown as OpenClawApp).handleAbortChat(),

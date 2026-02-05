@@ -3,7 +3,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { danger, shouldLogVerbose } from "../globals.js";
 import { logDebug, logError } from "../logger.js";
-import { resolveCommandStdio } from "./spawn-utils.js";
+import { resolveCommandStdio, spawnWithFallback } from "./spawn-utils.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -111,12 +111,40 @@ export async function runCommandWithTimeout(
   }
 
   const stdio = resolveCommandStdio({ hasInput, preferInherit: true });
-  const child = spawn(resolveCommand(argv[0]), argv.slice(1), {
+  const resolvedCommand = resolveCommand(argv[0]);
+  const spawnArgv = [resolvedCommand, ...argv.slice(1)];
+  const baseOptions = {
     stdio,
     cwd,
     env: resolvedEnv,
     windowsVerbatimArguments,
-  });
+  };
+  const fallbacks =
+    process.platform === "win32"
+      ? [
+          {
+            label: "pipe-stdio",
+            options: { stdio: ["pipe", "pipe", "pipe"] },
+          },
+          {
+            label: "verbatim-args",
+            options: { stdio: ["pipe", "pipe", "pipe"], windowsVerbatimArguments: true },
+          },
+          {
+            label: "shell",
+            options: { stdio: ["pipe", "pipe", "pipe"], shell: true },
+          },
+        ]
+      : [];
+  const child =
+    process.platform === "win32"
+      ? (await spawnWithFallback({
+          argv: spawnArgv,
+          options: baseOptions,
+          fallbacks,
+          retryCodes: ["EBADF", "EINVAL"],
+        })).child
+      : spawn(spawnArgv[0], spawnArgv.slice(1), baseOptions);
   // Spawn with inherited stdin (TTY) so tools like `pi` stay interactive when needed.
   return await new Promise((resolve, reject) => {
     let stdout = "";

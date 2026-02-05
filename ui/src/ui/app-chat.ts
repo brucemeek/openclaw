@@ -14,6 +14,7 @@ export type ChatHost = {
   connected: boolean;
   chatMessage: string;
   chatAttachments: ChatAttachment[];
+  chatRememberUploads: boolean;
   chatQueue: ChatQueueItem[];
   chatRunId: string | null;
   chatSending: boolean;
@@ -72,6 +73,7 @@ function enqueueChatMessage(
   host: ChatHost,
   text: string,
   attachments?: ChatAttachment[],
+  rememberUploads?: boolean,
   refreshSessions?: boolean,
 ) {
   const trimmed = text.trim();
@@ -86,6 +88,7 @@ function enqueueChatMessage(
       text: trimmed,
       createdAt: Date.now(),
       attachments: hasAttachments ? attachments?.map((att) => ({ ...att })) : undefined,
+      rememberUploads: hasAttachments ? rememberUploads : undefined,
       refreshSessions,
     },
   ];
@@ -98,13 +101,19 @@ async function sendChatMessageNow(
     previousDraft?: string;
     restoreDraft?: boolean;
     attachments?: ChatAttachment[];
+    rememberUploads?: boolean;
     previousAttachments?: ChatAttachment[];
     restoreAttachments?: boolean;
     refreshSessions?: boolean;
   },
 ) {
   resetToolStream(host as unknown as Parameters<typeof resetToolStream>[0]);
-  const runId = await sendChatMessage(host as unknown as OpenClawApp, message, opts?.attachments);
+  const runId = await sendChatMessage(
+    host as unknown as OpenClawApp,
+    message,
+    opts?.attachments,
+    opts?.rememberUploads,
+  );
   const ok = Boolean(runId);
   if (!ok && opts?.previousDraft != null) {
     host.chatMessage = opts.previousDraft;
@@ -145,6 +154,7 @@ async function flushChatQueue(host: ChatHost) {
   host.chatQueue = rest;
   const ok = await sendChatMessageNow(host, next.text, {
     attachments: next.attachments,
+    rememberUploads: next.rememberUploads,
     refreshSessions: next.refreshSessions,
   });
   if (!ok) {
@@ -169,6 +179,7 @@ export async function handleSendChat(
   const attachments = host.chatAttachments ?? [];
   const attachmentsToSend = messageOverride == null ? attachments : [];
   const hasAttachments = attachmentsToSend.length > 0;
+  const rememberUploads = host.chatRememberUploads;
 
   // Allow sending with just attachments (no message text required)
   if (!message && !hasAttachments) {
@@ -188,7 +199,7 @@ export async function handleSendChat(
   }
 
   if (isChatBusy(host)) {
-    enqueueChatMessage(host, message, attachmentsToSend, refreshSessions);
+    enqueueChatMessage(host, message, attachmentsToSend, rememberUploads, refreshSessions);
     return;
   }
 
@@ -196,6 +207,7 @@ export async function handleSendChat(
     previousDraft: messageOverride == null ? previousDraft : undefined,
     restoreDraft: Boolean(messageOverride && opts?.restoreDraft),
     attachments: hasAttachments ? attachmentsToSend : undefined,
+    rememberUploads: hasAttachments ? rememberUploads : undefined,
     previousAttachments: messageOverride == null ? attachments : undefined,
     restoreAttachments: Boolean(messageOverride && opts?.restoreDraft),
     refreshSessions,

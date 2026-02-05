@@ -99,6 +99,7 @@
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "0.13.1",
+    "@iarna/rtf-to-html": "^1.1.0",
     "@aws-sdk/client-bedrock": "^3.981.0",
     "@buape/carbon": "0.14.0",
     "@clack/prompts": "^1.0.0",
@@ -135,6 +136,7 @@
     "linkedom": "^0.18.12",
     "long": "^5.3.2",
     "markdown-it": "^14.1.0",
+    "mammoth": "^1.11.0",
     "node-edge-tts": "^1.2.9",
     "osc-progress": "^0.3.0",
     "pdfjs-dist": "^5.4.624",

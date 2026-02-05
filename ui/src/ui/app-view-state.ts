@@ -49,6 +49,7 @@ export type AppViewState = {
   chatSending: boolean;
   chatMessage: string;
   chatAttachments: ChatAttachment[];
+  chatRememberUploads: boolean;
   chatMessages: unknown[];
   chatToolMessages: unknown[];
   chatStream: string | null;

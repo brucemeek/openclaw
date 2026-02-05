@@ -155,7 +155,7 @@
 /* Image attachments preview */
 .chat-attachments {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
   padding: 8px;
   background: var(--panel);
@@ -164,6 +164,20 @@
   width: fit-content;
   max-width: 100%;
   align-self: flex-start; /* Don't stretch in flex column parent */
+}
+
+.chat-attachments__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.chat-attachments__list {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .chat-attachment {
@@ -337,6 +351,30 @@
   display: flex;
   align-items: stretch;
   gap: 8px;
+}
+
+.chat-compose__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chat-compose__toggle input {
+  margin: 0;
+}
+
+.chat-compose__toggle input:disabled + span {
+  opacity: 0.6;
 }
 
 .chat-compose .chat-compose__actions .btn {

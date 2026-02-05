@@ -47,7 +47,46 @@ describe("getShellConfig", () => {
   if (isWin) {
     it("uses PowerShell on Windows", () => {
       const { shell } = getShellConfig();
-      expect(shell.toLowerCase()).toContain("powershell");
+      const baseName = path.basename(shell).toLowerCase();
+      expect(baseName.includes("powershell") || baseName.includes("pwsh")).toBe(true);
+    });
+
+    it("falls back to cmd.exe for && when pwsh is unavailable", () => {
+      const originalProgramFiles = process.env.ProgramFiles;
+      const originalProgramW6432 = process.env.ProgramW6432;
+      const originalProgramFilesX86 = process.env["ProgramFiles(x86)"];
+      const originalPath = process.env.PATH;
+      const emptyRoot = fs.mkdtempSync(path.join(os.tmpdir(), "openclaw-shell-"));
+      tempDirs.push(emptyRoot);
+
+      process.env.ProgramFiles = emptyRoot;
+      process.env.ProgramW6432 = emptyRoot;
+      process.env["ProgramFiles(x86)"] = emptyRoot;
+      process.env.PATH = "";
+
+      const { shell } = getShellConfig("echo 1 && echo 2");
+      expect(path.basename(shell).toLowerCase()).toBe("cmd.exe");
+
+      if (originalProgramFiles == null) {
+        delete process.env.ProgramFiles;
+      } else {
+        process.env.ProgramFiles = originalProgramFiles;
+      }
+      if (originalProgramW6432 == null) {
+        delete process.env.ProgramW6432;
+      } else {
+        process.env.ProgramW6432 = originalProgramW6432;
+      }
+      if (originalProgramFilesX86 == null) {
+        delete process.env["ProgramFiles(x86)"];
+      } else {
+        process.env["ProgramFiles(x86)"] = originalProgramFilesX86;
+      }
+      if (originalPath == null) {
+        delete process.env.PATH;
+      } else {
+        process.env.PATH = originalPath;
+      }
     });
     return;
   }

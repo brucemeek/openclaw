@@ -19,8 +19,50 @@ function resolvePowerShellPath(): string {
   return "powershell.exe";
 }
 
-export function getShellConfig(): { shell: string; args: string[] } {
+function resolvePwshPath(): string | undefined {
+  const fromPath = resolveShellFromPath("pwsh.exe") ?? resolveShellFromPath("pwsh");
+  if (fromPath) {
+    return fromPath;
+  }
+  if (process.platform !== "win32") {
+    return undefined;
+  }
+  const programFilesRoots = [
+    process.env.ProgramFiles,
+    process.env.ProgramW6432,
+    process.env["ProgramFiles(x86)"],
+  ].filter((value): value is string => Boolean(value));
+  for (const root of programFilesRoots) {
+    const candidate = path.join(root, "PowerShell", "7", "pwsh.exe");
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return undefined;
+}
+
+function shouldFallbackToCmd(command?: string): boolean {
+  if (!command) {
+    return false;
+  }
+  return /&&|\|\|/.test(command);
+}
+
+export function getShellConfig(command?: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
+    const pwsh = resolvePwshPath();
+    if (pwsh) {
+      return {
+        shell: pwsh,
+        args: ["-NoProfile", "-NonInteractive", "-Command"],
+      };
+    }
+    if (shouldFallbackToCmd(command)) {
+      return {
+        shell: "cmd.exe",
+        args: ["/d", "/s", "/c"],
+      };
+    }
     // Use PowerShell instead of cmd.exe on Windows.
     // Problem: Many Windows system utilities (ipconfig, systeminfo, etc.) write
     // directly to the console via WriteConsole API, bypassing stdout pipes.
@@ -54,11 +96,12 @@ function resolveShellFromPath(name: string): string | undefined {
   if (!envPath) {
     return undefined;
   }
+  const accessMode = process.platform === "win32" ? fs.constants.F_OK : fs.constants.X_OK;
   const entries = envPath.split(path.delimiter).filter(Boolean);
   for (const entry of entries) {
     const candidate = path.join(entry, name);
     try {
-      fs.accessSync(candidate, fs.constants.X_OK);
+      fs.accessSync(candidate, accessMode);
       return candidate;
     } catch {
       // ignore missing or non-executable entries

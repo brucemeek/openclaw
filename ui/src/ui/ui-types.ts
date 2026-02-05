@@ -10,6 +10,7 @@ export type ChatQueueItem = {
   text: string;
   createdAt: number;
   attachments?: ChatAttachment[];
+  rememberUploads?: boolean;
   refreshSessions?: boolean;
 };
 

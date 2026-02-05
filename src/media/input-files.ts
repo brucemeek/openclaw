@@ -3,9 +3,13 @@ import { logWarn } from "../logger.js";
 
 type CanvasModule = typeof import("@napi-rs/canvas");
 type PdfJsModule = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
+type MammothModule = typeof import("mammoth");
+type RtfToHtmlModule = typeof import("@iarna/rtf-to-html");
 
 let canvasModulePromise: Promise<CanvasModule> | null = null;
 let pdfJsModulePromise: Promise<PdfJsModule> | null = null;
+let mammothModulePromise: Promise<MammothModule> | null = null;
+let rtfToHtmlModulePromise: Promise<RtfToHtmlModule> | null = null;
 
 // Lazy-load optional PDF/image deps so non-PDF paths don't require native installs.
 async function loadCanvasModule(): Promise<CanvasModule> {
@@ -30,6 +34,30 @@ async function loadPdfJsModule(): Promise<PdfJsModule> {
     });
   }
   return pdfJsModulePromise;
+}
+
+async function loadMammothModule(): Promise<MammothModule> {
+  if (!mammothModulePromise) {
+    mammothModulePromise = import("mammoth").catch((err) => {
+      mammothModulePromise = null;
+      throw new Error(
+        `Optional dependency mammoth is required for DOCX extraction: ${String(err)}`,
+      );
+    });
+  }
+  return mammothModulePromise;
+}
+
+async function loadRtfToHtmlModule(): Promise<RtfToHtmlModule> {
+  if (!rtfToHtmlModulePromise) {
+    rtfToHtmlModulePromise = import("@iarna/rtf-to-html").catch((err) => {
+      rtfToHtmlModulePromise = null;
+      throw new Error(
+        `Optional dependency @iarna/rtf-to-html is required for RTF extraction: ${String(err)}`,
+      );
+    });
+  }
+  return rtfToHtmlModulePromise;
 }
 
 export type InputImageContent = {
@@ -97,6 +125,9 @@ export const DEFAULT_INPUT_FILE_MIMES = [
   "text/csv",
   "application/json",
   "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/rtf",
+  "text/rtf",
 ];
 export const DEFAULT_INPUT_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 export const DEFAULT_INPUT_FILE_MAX_BYTES = 5 * 1024 * 1024;
@@ -194,6 +225,10 @@ function clampText(text: string, maxChars: number): string {
   return text.slice(0, maxChars);
 }
 
+function stripHtmlTags(value: string): string {
+  return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 async function extractPdfContent(params: {
   buffer: Buffer;
   limits: InputFileLimits;
@@ -251,6 +286,36 @@ async function extractPdfContent(params: {
   }
 
   return { text, images };
+}
+
+async function extractDocxContent(buffer: Buffer): Promise<string> {
+  const mammoth = await loadMammothModule();
+  const api = (mammoth as unknown as { default?: MammothModule }).default ?? mammoth;
+  const result = await api.extractRawText({ buffer });
+  return result?.value ?? "";
+}
+
+async function extractRtfContent(buffer: Buffer): Promise<string> {
+  const rtfToHtml = await loadRtfToHtmlModule();
+  const api = (rtfToHtml as unknown as { default?: unknown }).default ?? rtfToHtml;
+  const fromString = (api as { fromString?: unknown }).fromString;
+  if (typeof fromString !== "function") {
+    throw new Error("Invalid rtf-to-html module");
+  }
+  const rtf = buffer.toString("utf-8");
+  const html = await new Promise<string>((resolve, reject) => {
+    (fromString as (value: string, cb: (err: unknown, html: string) => void) => void)(
+      rtf,
+      (err, htmlResult) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(htmlResult ?? "");
+      },
+    );
+  });
+  return stripHtmlTags(html);
 }
 
 export async function extractImageContentFromSource(
@@ -339,6 +404,16 @@ export async function extractFileContentFromSource(params: {
   }
   if (!limits.allowedMimes.has(mimeType)) {
     throw new Error(`Unsupported file MIME type: ${mimeType}`);
+  }
+
+  if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    const text = await extractDocxContent(buffer);
+    return { filename, text: clampText(text, limits.maxChars) };
+  }
+
+  if (mimeType === "application/rtf" || mimeType === "text/rtf") {
+    const text = await extractRtfContent(buffer);
+    return { filename, text: clampText(text, limits.maxChars) };
   }
 
   if (mimeType === "application/pdf") {
