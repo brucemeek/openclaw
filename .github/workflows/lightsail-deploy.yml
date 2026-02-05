@@ -15,6 +15,7 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        if: ${{ secrets.LIGHTSAIL_HOST != '' && secrets.LIGHTSAIL_USER != '' && secrets.LIGHTSAIL_SSH_KEY != '' }}
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
