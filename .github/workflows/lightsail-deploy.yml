@@ -1,0 +1,32 @@
+name: Deploy to Lightsail
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: lightsail-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            export PATH="$HOME/.npm-global/bin:$PATH"
+            cd /home/ec2-user/openclaw-src
+            git fetch origin main
+            git reset --hard origin/main
+            pnpm install --frozen-lockfile
+            pnpm build
+            pnpm ui:build
+            sudo /usr/bin/npm install -g .
+            systemctl --user restart openclaw-gateway.service

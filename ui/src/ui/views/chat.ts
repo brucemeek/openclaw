@@ -110,6 +110,10 @@ function generateAttachmentId(): string {
   return `att-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function isImageAttachment(att: ChatAttachment): boolean {
+  return att.mimeType.startsWith("image/");
+}
+
 function handlePaste(e: ClipboardEvent, props: ChatProps) {
   const items = e.clipboardData?.items;
   if (!items || !props.onAttachmentsChange) {
@@ -142,13 +146,47 @@ function handlePaste(e: ClipboardEvent, props: ChatProps) {
       const newAttachment: ChatAttachment = {
         id: generateAttachmentId(),
         dataUrl,
-        mimeType: file.type,
+        mimeType: file.type || "application/octet-stream",
+        fileName: file.name || undefined,
       };
       const current = props.attachments ?? [];
       props.onAttachmentsChange?.([...current, newAttachment]);
     });
     reader.readAsDataURL(file);
   }
+}
+
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+
+function handleFileSelect(e: Event, props: ChatProps) {
+  const input = e.target as HTMLInputElement | null;
+  if (!input?.files || !props.onAttachmentsChange) {
+    return;
+  }
+  const files = Array.from(input.files);
+  if (files.length === 0) {
+    return;
+  }
+  for (const file of files) {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      console.warn(`Skipping ${file.name}: exceeds ${MAX_UPLOAD_BYTES} bytes`);
+      continue;
+    }
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      const dataUrl = reader.result as string;
+      const newAttachment: ChatAttachment = {
+        id: generateAttachmentId(),
+        dataUrl,
+        mimeType: file.type || "application/octet-stream",
+        fileName: file.name || undefined,
+      };
+      const current = props.attachments ?? [];
+      props.onAttachmentsChange?.([...current, newAttachment]);
+    });
+    reader.readAsDataURL(file);
+  }
+  input.value = "";
 }
 
 function renderAttachmentPreview(props: ChatProps) {
@@ -162,11 +200,24 @@ function renderAttachmentPreview(props: ChatProps) {
       ${attachments.map(
         (att) => html`
           <div class="chat-attachment">
-            <img
-              src=${att.dataUrl}
-              alt="Attachment preview"
-              class="chat-attachment__img"
-            />
+            ${
+              isImageAttachment(att)
+                ? html`
+                    <img
+                      src=${att.dataUrl}
+                      alt="Attachment preview"
+                      class="chat-attachment__img"
+                    />
+                  `
+                : html`
+                    <div class="chat-attachment__file">
+                      <span class="chat-attachment__icon">${icons.fileText}</span>
+                      <span class="chat-attachment__name">
+                        ${att.fileName || "Attachment"}
+                      </span>
+                    </div>
+                  `
+            }
             <button
               class="chat-attachment__remove"
               type="button"
@@ -200,8 +251,8 @@ export function renderChat(props: ChatProps) {
   const hasAttachments = (props.attachments?.length ?? 0) > 0;
   const composePlaceholder = props.connected
     ? hasAttachments
-      ? "Add a message or paste more images..."
-      : "Message (↩ to send, Shift+↩ for line breaks, paste images)"
+      ? "Add a message or attach more files..."
+      : "Message (↩ to send, Shift+↩ for line breaks, paste images or attach files)"
     : "Connect to the gateway to start chatting…";
 
   const splitRatio = props.splitRatio ?? 0.6;
@@ -323,7 +374,9 @@ export function renderChat(props: ChatProps) {
                       <div class="chat-queue__text">
                         ${
                           item.text ||
-                          (item.attachments?.length ? `Image (${item.attachments.length})` : "")
+                          (item.attachments?.length
+                            ? `Attachment (${item.attachments.length})`
+                            : "")
                         }
                       </div>
                       <button
@@ -394,6 +447,32 @@ export function renderChat(props: ChatProps) {
             ></textarea>
           </label>
           <div class="chat-compose__actions">
+            <input
+              ${ref((el) => {
+                if (el instanceof HTMLInputElement) {
+                  el.value = "";
+                }
+              })}
+              class="chat-compose__file-input"
+              type="file"
+              multiple
+              accept=".md,.markdown,.txt,.pdf,.doc,.docx,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
+              @change=${(e: Event) => handleFileSelect(e, props)}
+              hidden
+            />
+            <button
+              class="btn"
+              ?disabled=${!props.connected}
+              @click=${(e: Event) => {
+                const target = (e.currentTarget as HTMLElement)
+                  .closest(".chat-compose__actions")
+                  ?.querySelector<HTMLInputElement>(".chat-compose__file-input");
+                target?.click();
+              }}
+            >
+              ${icons.paperclip}
+              Attach
+            </button>
             <button
               class="btn"
               ?disabled=${!props.connected || (!canAbort && props.sending)}

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { MsgContext } from "../../auto-reply/templating.js";
 import type { GatewayRequestContext, GatewayRequestHandlers } from "./types.js";
-import { resolveSessionAgentId } from "../../agents/agent-scope.js";
+import { resolveAgentWorkspaceDir, resolveSessionAgentId } from "../../agents/agent-scope.js";
 import { resolveEffectiveMessagesConfig, resolveIdentityName } from "../../agents/identity.js";
 import { resolveThinkingDefault } from "../../agents/model-selection.js";
 import { resolveAgentTimeoutMs } from "../../agents/timeout.js";
@@ -42,6 +42,7 @@ import {
 } from "../session-utils.js";
 import { formatForLog } from "../ws-log.js";
 import { injectTimestamp, timestampOptsFromConfig } from "./agent-timestamp.js";
+import { detectMime } from "../../media/mime.js";
 
 type TranscriptAppendResult = {
   ok: boolean;
@@ -49,6 +50,157 @@ type TranscriptAppendResult = {
   message?: Record<string, unknown>;
   error?: string;
 };
+
+type NormalizedAttachment = {
+  type?: string;
+  mimeType?: string;
+  fileName?: string;
+  content: string;
+};
+
+type SavedAttachment = {
+  fileName: string;
+  relPath: string;
+  mimeType?: string;
+  sizeBytes: number;
+};
+
+const MAX_FILE_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+const UPLOADS_DIR_NAME = "uploads";
+
+function normalizeMime(mime?: string): string | undefined {
+  if (!mime) {
+    return undefined;
+  }
+  const cleaned = mime.split(";")[0]?.trim().toLowerCase();
+  return cleaned || undefined;
+}
+
+function isImageMime(mime?: string): boolean {
+  return typeof mime === "string" && mime.startsWith("image/");
+}
+
+async function sniffMimeFromBase64(base64: string): Promise<string | undefined> {
+  const trimmed = base64.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  const take = Math.min(256, trimmed.length);
+  const sliceLen = take - (take % 4);
+  if (sliceLen < 8) {
+    return undefined;
+  }
+  try {
+    const head = Buffer.from(trimmed.slice(0, sliceLen), "base64");
+    return await detectMime({ buffer: head });
+  } catch {
+    return undefined;
+  }
+}
+
+function parseAttachmentBase64(label: string, content: string, maxBytes: number) {
+  let b64 = content.trim();
+  const dataUrlMatch = /^data:[^;]+;base64,(.*)$/.exec(b64);
+  if (dataUrlMatch) {
+    b64 = dataUrlMatch[1];
+  }
+  if (b64.length % 4 !== 0 || /[^A-Za-z0-9+/=]/.test(b64)) {
+    throw new Error(`attachment ${label}: invalid base64 content`);
+  }
+  let buffer: Buffer;
+  try {
+    buffer = Buffer.from(b64, "base64");
+  } catch {
+    throw new Error(`attachment ${label}: invalid base64 content`);
+  }
+  const sizeBytes = buffer.byteLength;
+  if (sizeBytes <= 0 || sizeBytes > maxBytes) {
+    throw new Error(`attachment ${label}: exceeds size limit (${sizeBytes} > ${maxBytes} bytes)`);
+  }
+  return { base64: b64, buffer, sizeBytes };
+}
+
+function sanitizeFileName(name: string | undefined, fallback: string): string {
+  const raw = name?.replace(/\\/g, "/");
+  const base = raw ? path.posix.basename(raw) : "";
+  const cleaned = base.replace(/[^a-zA-Z0-9._-]/g, "_");
+  return cleaned || fallback;
+}
+
+function guessExtension(mime?: string): string {
+  switch (mime) {
+    case "application/pdf":
+      return ".pdf";
+    case "application/msword":
+      return ".doc";
+    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      return ".docx";
+    case "text/markdown":
+      return ".md";
+    case "text/plain":
+      return ".txt";
+    default:
+      return "";
+  }
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  const kb = bytes / 1024;
+  if (kb < 1024) {
+    return `${kb.toFixed(1)} KB`;
+  }
+  const mb = kb / 1024;
+  return `${mb.toFixed(1)} MB`;
+}
+
+async function processChatAttachments(params: {
+  attachments: NormalizedAttachment[];
+  workspaceDir: string;
+}): Promise<{ imageAttachments: NormalizedAttachment[]; savedFiles: SavedAttachment[] }> {
+  if (params.attachments.length === 0) {
+    return { imageAttachments: [], savedFiles: [] };
+  }
+  const imageAttachments: NormalizedAttachment[] = [];
+  const savedFiles: SavedAttachment[] = [];
+  const uploadsDir = path.join(params.workspaceDir, UPLOADS_DIR_NAME);
+  await fs.promises.mkdir(uploadsDir, { recursive: true });
+
+  for (const [idx, att] of params.attachments.entries()) {
+    const label = att.fileName || att.type || `attachment-${idx + 1}`;
+    const parsed = parseAttachmentBase64(label, att.content, MAX_FILE_ATTACHMENT_BYTES);
+    const providedMime = normalizeMime(att.mimeType);
+    const sniffedMime = normalizeMime(await sniffMimeFromBase64(parsed.base64));
+    const effectiveMime = sniffedMime ?? providedMime;
+
+    if (isImageMime(effectiveMime)) {
+      imageAttachments.push({
+        ...att,
+        mimeType: effectiveMime ?? att.mimeType,
+        content: parsed.base64,
+      });
+      continue;
+    }
+
+    const ext = path.extname(att.fileName ?? "") || guessExtension(effectiveMime);
+    const fallback = `${label}${ext}`;
+    const safeBase = sanitizeFileName(att.fileName, fallback);
+    const safeName = ext && !path.extname(safeBase) ? `${safeBase}${ext}` : safeBase;
+    const uniqueName = `${Date.now()}-${randomUUID().slice(0, 8)}-${safeName}`;
+    const absPath = path.join(uploadsDir, uniqueName);
+    await fs.promises.writeFile(absPath, parsed.buffer);
+    savedFiles.push({
+      fileName: uniqueName,
+      relPath: path.posix.join(UPLOADS_DIR_NAME, uniqueName),
+      mimeType: effectiveMime ?? att.mimeType,
+      sizeBytes: parsed.sizeBytes,
+    });
+  }
+
+  return { imageAttachments, savedFiles };
+}
 
 function resolveTranscriptPath(params: {
   sessionId: string;
@@ -353,22 +505,40 @@ export const chatHandlers: GatewayRequestHandlers = {
       );
       return;
     }
+    const { cfg, entry } = loadSessionEntry(p.sessionKey);
     let parsedMessage = p.message;
     let parsedImages: ChatImageContent[] = [];
     if (normalizedAttachments.length > 0) {
       try {
-        const parsed = await parseMessageWithAttachments(p.message, normalizedAttachments, {
-          maxBytes: 5_000_000,
-          log: context.logGateway,
+        const agentId = resolveSessionAgentId({ sessionKey: p.sessionKey, config: cfg });
+        const workspaceDir = resolveAgentWorkspaceDir(cfg, agentId);
+        const { imageAttachments, savedFiles } = await processChatAttachments({
+          attachments: normalizedAttachments as NormalizedAttachment[],
+          workspaceDir,
         });
-        parsedMessage = parsed.message;
-        parsedImages = parsed.images;
+        if (savedFiles.length > 0) {
+          const summary = savedFiles
+            .map(
+              (file) =>
+                `- ${file.relPath} (${file.mimeType ?? "unknown"}, ${formatBytes(file.sizeBytes)})`,
+            )
+            .join("\n");
+          const note = `Uploaded files saved to workspace:\n${summary}`;
+          parsedMessage = parsedMessage.trim() ? `${parsedMessage}\n\n${note}` : note;
+        }
+        if (imageAttachments.length > 0) {
+          const parsed = await parseMessageWithAttachments(parsedMessage, imageAttachments, {
+            maxBytes: 5_000_000,
+            log: context.logGateway,
+          });
+          parsedMessage = parsed.message;
+          parsedImages = parsed.images;
+        }
       } catch (err) {
         respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, String(err)));
         return;
       }
     }
-    const { cfg, entry } = loadSessionEntry(p.sessionKey);
     const timeoutMs = resolveAgentTimeoutMs({
       cfg,
       overrideMs: p.timeoutMs,

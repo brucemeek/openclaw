@@ -69,5 +69,8 @@ IDENTITY.md
 USER.md
 .tgz
 
+# Local keys
+LightsailDefaultKey-us-east-2.pem
+
 # local tooling
 .serena/
