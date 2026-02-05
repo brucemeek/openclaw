@@ -12,14 +12,18 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      LIGHTSAIL_HOST: ${{ secrets.LIGHTSAIL_HOST }}
+      LIGHTSAIL_USER: ${{ secrets.LIGHTSAIL_USER }}
+      LIGHTSAIL_SSH_KEY: ${{ secrets.LIGHTSAIL_SSH_KEY }}
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
-        if: ${{ secrets.LIGHTSAIL_HOST != '' && secrets.LIGHTSAIL_USER != '' && secrets.LIGHTSAIL_SSH_KEY != '' }}
+        if: ${{ env.LIGHTSAIL_HOST != '' && env.LIGHTSAIL_USER != '' && env.LIGHTSAIL_SSH_KEY != '' }}
         with:
-          host: ${{ secrets.LIGHTSAIL_HOST }}
-          username: ${{ secrets.LIGHTSAIL_USER }}
-          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          host: ${{ env.LIGHTSAIL_HOST }}
+          username: ${{ env.LIGHTSAIL_USER }}
+          key: ${{ env.LIGHTSAIL_SSH_KEY }}
           script: |
             set -euo pipefail
             export PATH="$HOME/.npm-global/bin:$PATH"
