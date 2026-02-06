@@ -28,10 +28,12 @@ jobs:
             set -euo pipefail
             export PATH="$HOME/.npm-global/bin:$PATH"
             cd /home/ec2-user/openclaw-src
-            git fetch origin main
-            git reset --hard origin/main
+            REPO_URL="${{ github.server_url }}/${{ github.repository }}.git"
+            git fetch "$REPO_URL" main
+            git checkout main
+            git merge --ff-only FETCH_HEAD
             pnpm install --frozen-lockfile
             pnpm build
             pnpm ui:build
             sudo /usr/bin/npm install -g .
-            systemctl --user restart openclaw-gateway.service
+            sudo systemctl restart openclaw-gateway.service
