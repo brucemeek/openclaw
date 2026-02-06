@@ -35,5 +35,5 @@ jobs:
             pnpm install --frozen-lockfile
             pnpm build
             pnpm ui:build
-            sudo /usr/bin/npm install -g .
+            npm install -g .
             sudo systemctl restart openclaw-gateway.service
