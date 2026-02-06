@@ -220,6 +220,27 @@ export function handleMessageEnd(
   const chunkerHasBuffered = ctx.blockChunker?.hasBuffered() ?? false;
   ctx.finalizeAssistantTexts({ text, addedDuringMessage, chunkerHasBuffered });
 
+  // Non-streaming providers may skip text_delta events entirely. When block
+  // replies are disabled, emit a final assistant event so webchat/TUI clients
+  // still receive the response.
+  if (!ctx.state.lastStreamedAssistantCleaned && text && !ctx.params.onBlockReply) {
+    emitAgentEvent({
+      runId: ctx.params.runId,
+      stream: "assistant",
+      data: {
+        text,
+        delta: text,
+      },
+    });
+    void ctx.params.onAgentEvent?.({
+      stream: "assistant",
+      data: {
+        text,
+        delta: text,
+      },
+    });
+  }
+
   const onBlockReply = ctx.params.onBlockReply;
   const shouldEmitReasoning = Boolean(
     ctx.state.includeReasoning &&
