@@ -28,6 +28,8 @@ deployments work at a high level.
 - The **Gateway runs on the VPS** and owns state + workspace.
 - You connect from your laptop/phone via the **Control UI** or **Tailscale/SSH**.
 - Treat the VPS as the source of truth and **back up** the state + workspace.
+- Schedule regular backups of the state dir and workspace (see [State Sync](/gateway/state-sync)).
+- Need two way sync between the VPS and a local machine? Use [State Sync](/gateway/state-sync).
 - Secure default: keep the Gateway on loopback and access it via SSH tunnel or Tailscale Serve.
   If you bind to `lan`/`tailnet`, require `gateway.auth.token` or `gateway.auth.password`.
 

@@ -137,6 +137,14 @@ const entries: SubCliEntry[] = [
     },
   },
   {
+    name: "sync",
+    description: "State sync helpers",
+    register: async (program) => {
+      const mod = await import("../sync-cli.js");
+      mod.registerSyncCli(program);
+    },
+  },
+  {
     name: "dns",
     description: "DNS helpers",
     register: async (program) => {

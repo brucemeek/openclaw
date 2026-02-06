@@ -18,6 +18,7 @@ import { loadInternalHooks } from "../hooks/loader.js";
 import { isTruthyEnvValue } from "../infra/env.js";
 import { type PluginServicesHandle, startPluginServices } from "../plugins/services.js";
 import { startBrowserControlServerIfEnabled } from "./server-browser.js";
+import { startGatewaySyncRunner, type GatewaySyncRunner } from "./state-sync.js";
 import {
   scheduleRestartSentinelWake,
   shouldWakeFromRestartSentinel,
@@ -30,6 +31,7 @@ export async function startGatewaySidecars(params: {
   deps: CliDeps;
   startChannels: () => Promise<void>;
   log: { warn: (msg: string) => void };
+  logSync: { info: (msg: string) => void; warn: (msg: string) => void };
   logHooks: {
     info: (msg: string) => void;
     warn: (msg: string) => void;
@@ -155,6 +157,15 @@ export async function startGatewaySidecars(params: {
       void scheduleRestartSentinelWake({ deps: params.deps });
     }, 750);
   }
+  let syncRunner: GatewaySyncRunner | null = null;
+  try {
+    syncRunner = startGatewaySyncRunner(params.cfg);
+    if (syncRunner) {
+      params.logSync.info("gateway sync runner started");
+    }
+  } catch (err) {
+    params.logSync.warn(`gateway sync runner failed to start: ${String(err)}`);
+  }
 
-  return { browserControl, pluginServices };
+  return { browserControl, pluginServices, syncRunner };
 }

@@ -974,6 +974,7 @@
                       "gateway/gateway-lock",
                       "gateway/background-process",
                       "gateway/multiple-gateways",
+                      "gateway/state-sync",
                       "gateway/troubleshooting"
                     ]
                   },

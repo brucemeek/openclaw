@@ -504,6 +504,47 @@ export const OpenClawSchema = z
           })
           .strict()
           .optional(),
+        sync: z
+          .object({
+            enabled: z.boolean().optional(),
+            direction: z.union([z.literal("push"), z.literal("pull"), z.literal("both")]).optional(),
+            intervalMinutes: z.number().int().positive().optional(),
+            initialDelayMs: z.number().int().nonnegative().optional(),
+            timeoutMs: z.number().int().positive().optional(),
+            rsyncPath: z.string().optional(),
+            delete: z.boolean().optional(),
+            backupDir: z.string().optional(),
+            dryRun: z.boolean().optional(),
+            exclude: z.array(z.string()).optional(),
+            local: z
+              .object({
+                path: z.string().optional(),
+              })
+              .strict()
+              .optional(),
+            remote: z
+              .object({
+                sshTarget: z.string().optional(),
+                path: z.string().optional(),
+                sshIdentity: z.string().optional(),
+                sshPort: z.number().int().positive().optional(),
+                sshOptions: z.array(z.string()).optional(),
+              })
+              .strict()
+              .optional(),
+            mappings: z
+              .array(
+                z
+                  .object({
+                    local: z.string(),
+                    remote: z.string(),
+                  })
+                  .strict(),
+              )
+              .optional(),
+          })
+          .strict()
+          .optional(),
       })
       .strict()
       .optional(),

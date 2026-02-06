@@ -211,6 +211,60 @@ export type GatewayNodesConfig = {
   denyCommands?: string[];
 };
 
+export type GatewaySyncDirection = "push" | "pull" | "both";
+
+export type GatewaySyncRemoteConfig = {
+  /** SSH target for rsync (user@host). */
+  sshTarget?: string;
+  /** Remote base path (defaults to local path if omitted). */
+  path?: string;
+  /** SSH identity file path. */
+  sshIdentity?: string;
+  /** SSH port (default: 22). */
+  sshPort?: number;
+  /** Extra SSH options (passed as -o entries). */
+  sshOptions?: string[];
+};
+
+export type GatewaySyncLocalConfig = {
+  /** Local base path (defaults to OPENCLAW_STATE_DIR). */
+  path?: string;
+};
+
+export type GatewaySyncMapping = {
+  local: string;
+  remote: string;
+};
+
+export type GatewaySyncConfig = {
+  /** Enable gateway sync runner. */
+  enabled?: boolean;
+  /** Sync direction (default: both). */
+  direction?: GatewaySyncDirection;
+  /** Interval in minutes between sync runs (default: 5). */
+  intervalMinutes?: number;
+  /** Initial delay before the first sync run (ms). */
+  initialDelayMs?: number;
+  /** Timeout per rsync invocation (ms). */
+  timeoutMs?: number;
+  /** rsync binary path override. */
+  rsyncPath?: string;
+  /** Delete files that were removed on the source. */
+  delete?: boolean;
+  /** Backup dir for replaced files (relative to destination root). */
+  backupDir?: string;
+  /** Dry run mode (do not write). */
+  dryRun?: boolean;
+  /** Exclude patterns (overrides defaults when set). */
+  exclude?: string[];
+  /** Local base path override. */
+  local?: GatewaySyncLocalConfig;
+  /** Remote ssh settings. */
+  remote?: GatewaySyncRemoteConfig;
+  /** Additional root mappings to sync. */
+  mappings?: GatewaySyncMapping[];
+};
+
 export type GatewayConfig = {
   /** Single multiplexed port for Gateway WS + HTTP (default: 18789). */
   port?: number;
@@ -239,6 +293,7 @@ export type GatewayConfig = {
   tls?: GatewayTlsConfig;
   http?: GatewayHttpConfig;
   nodes?: GatewayNodesConfig;
+  sync?: GatewaySyncConfig;
   /**
    * IPs of trusted reverse proxies (e.g. Traefik, nginx). When a connection
    * arrives from one of these IPs, the Gateway trusts `x-forwarded-for` (or
