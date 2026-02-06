@@ -1,5 +1,6 @@
 import type { GatewayBrowserClient } from "../gateway.ts";
 import type { ChatAttachment } from "../ui-types.ts";
+import { parseAgentSessionKey } from "../../../../src/sessions/session-key-utils.js";
 import { extractText } from "../chat/message-extract.ts";
 import { generateUUID } from "../uuid.ts";
 
@@ -26,6 +27,15 @@ export type ChatEventPayload = {
   message?: unknown;
   errorMessage?: string;
 };
+
+function normalizeChatSessionKey(value: string | null | undefined): string {
+  const raw = (value ?? "").trim();
+  if (!raw) {
+    return "";
+  }
+  const parsed = parseAgentSessionKey(raw);
+  return parsed?.rest ?? raw;
+}
 
 export async function loadChatHistory(state: ChatState) {
   if (!state.client || !state.connected) {
@@ -184,7 +194,9 @@ export function handleChatEvent(state: ChatState, payload?: ChatEventPayload) {
   if (!payload) {
     return null;
   }
-  if (payload.sessionKey !== state.sessionKey) {
+  const expectedKey = normalizeChatSessionKey(state.sessionKey);
+  const incomingKey = normalizeChatSessionKey(payload.sessionKey);
+  if (!expectedKey || incomingKey !== expectedKey) {
     return null;
   }
 
