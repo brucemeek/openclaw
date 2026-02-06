@@ -5,6 +5,7 @@ import fsPromises from "node:fs/promises";
 import path from "node:path";
 import { resolveAgentConfig } from "../agents/agent-scope.js";
 import { resolveBrowserConfig } from "../browser/config.js";
+import { extractBrowserProfileName } from "../browser/profiles.js";
 import {
   createBrowserControlContext,
   startBrowserControlServiceFromConfig,
@@ -759,7 +760,10 @@ async function handleInvoke(
       await ensureBrowserControlService();
       const cfg = loadConfig();
       const resolved = resolveBrowserConfig(cfg.browser, cfg);
-      const requestedProfile = typeof params.profile === "string" ? params.profile.trim() : "";
+      const requestedProfileRaw = typeof params.profile === "string" ? params.profile.trim() : "";
+      const requestedProfile = requestedProfileRaw
+        ? (extractBrowserProfileName(requestedProfileRaw) ?? requestedProfileRaw)
+        : "";
       const allowedProfiles = proxyConfig.allowProfiles;
       if (allowedProfiles.length > 0) {
         if (pathValue !== "/profiles") {

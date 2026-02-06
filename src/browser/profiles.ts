@@ -24,6 +24,41 @@ export function isValidProfileName(name: string): boolean {
   return PROFILE_NAME_REGEX.test(name);
 }
 
+function normalizeProfileToken(token: string): string | null {
+  const trimmed = token.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (isValidProfileName(trimmed)) {
+    return trimmed;
+  }
+  const lower = trimmed.toLowerCase();
+  if (isValidProfileName(lower)) {
+    return lower;
+  }
+  return null;
+}
+
+export function extractBrowserProfileName(raw?: string | null): string | null {
+  const trimmed = raw?.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const direct = normalizeProfileToken(trimmed);
+  if (direct) {
+    return direct;
+  }
+  // Allow composite strings like "openclaw,targetId:...".
+  const tokens = trimmed.split(/[,;\s]+/).filter(Boolean);
+  for (const token of tokens) {
+    const normalized = normalizeProfileToken(token);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return null;
+}
+
 export function allocateCdpPort(
   usedPorts: Set<number>,
   range?: { start: number; end: number },

@@ -9,6 +9,38 @@ function isAbsoluteHttp(url: string): boolean {
   return /^https?:\/\//i.test(url.trim());
 }
 
+function isTimeoutLike(message: string): boolean {
+  const msg = message.toLowerCase();
+  return (
+    msg.includes("timed out") ||
+    msg.includes("timeout") ||
+    msg.includes("aborted") ||
+    msg.includes("aborterror")
+  );
+}
+
+function isConnectivityErrorMessage(message: string): boolean {
+  const msg = message.toLowerCase();
+  if (isTimeoutLike(message)) {
+    return true;
+  }
+  return [
+    "econnrefused",
+    "econnreset",
+    "ehostunreach",
+    "enetunreach",
+    "enotfound",
+    "eai_again",
+    "fetch failed",
+    "failed to fetch",
+    "networkerror",
+    "socket hang up",
+    "getaddrinfo",
+    "connection refused",
+    "connection reset",
+  ].some((needle) => msg.includes(needle));
+}
+
 function enhanceBrowserFetchError(url: string, err: unknown, timeoutMs: number): Error {
   const hint = isAbsoluteHttp(url)
     ? "If this is a sandboxed session, ensure the sandbox browser is running and try again."
@@ -53,8 +85,9 @@ export async function fetchBrowserJson<T>(
   init?: RequestInit & { timeoutMs?: number },
 ): Promise<T> {
   const timeoutMs = init?.timeoutMs ?? 5000;
+  const absolute = isAbsoluteHttp(url);
   try {
-    if (isAbsoluteHttp(url)) {
+    if (absolute) {
       return await fetchHttpJson<T>(url, { ...init, timeoutMs });
     }
     const started = await startBrowserControlServiceFromConfig();
@@ -105,6 +138,16 @@ export async function fetchBrowserJson<T>(
     }
     return result.body as T;
   } catch (err) {
+    const msg = String(err);
+    if (!isConnectivityErrorMessage(msg)) {
+      throw err instanceof Error ? err : new Error(msg);
+    }
+    if (!absolute) {
+      if (isTimeoutLike(msg)) {
+        throw new Error(`Browser request timed out after ${timeoutMs}ms.`);
+      }
+      throw err instanceof Error ? err : new Error(msg);
+    }
     throw enhanceBrowserFetchError(url, err, timeoutMs);
   }
 }

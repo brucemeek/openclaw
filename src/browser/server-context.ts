@@ -411,14 +411,19 @@ function createProfileContext(
     };
 
     let chosen = targetId ? resolveById(targetId) : pickDefault();
+    if (chosen === "AMBIGUOUS") {
+      throw new Error("ambiguous target id prefix");
+    }
+    if (!chosen && targetId) {
+      const fallback = pickDefault();
+      if (fallback) {
+        chosen = fallback;
+      }
+    }
     if (!chosen && profile.driver === "extension" && candidates.length === 1) {
       // If an agent passes a stale/foreign targetId but we only have a single attached tab,
       // recover by using that tab instead of failing hard.
       chosen = candidates[0] ?? null;
-    }
-
-    if (chosen === "AMBIGUOUS") {
-      throw new Error("ambiguous target id prefix");
     }
     if (!chosen) {
       throw new Error("tab not found");

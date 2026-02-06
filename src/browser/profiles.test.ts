@@ -4,11 +4,25 @@ import {
   allocateColor,
   CDP_PORT_RANGE_END,
   CDP_PORT_RANGE_START,
+  extractBrowserProfileName,
   getUsedColors,
   getUsedPorts,
   isValidProfileName,
   PROFILE_COLORS,
 } from "./profiles.js";
+
+describe("extractBrowserProfileName", () => {
+  it("returns normalized profile names from composite strings", () => {
+    expect(extractBrowserProfileName("openclaw,targetId:ABC123")).toBe("openclaw");
+    expect(extractBrowserProfileName(" OPENCLAW ")).toBe("openclaw");
+    expect(extractBrowserProfileName("chrome targetId:xyz")).toBe("chrome");
+  });
+
+  it("returns null when no valid profile token exists", () => {
+    expect(extractBrowserProfileName("targetId:ABC123")).toBeNull();
+    expect(extractBrowserProfileName("")).toBeNull();
+  });
+});
 
 describe("profile name validation", () => {
   it("accepts valid lowercase names", () => {

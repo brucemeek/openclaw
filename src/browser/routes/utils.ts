@@ -1,4 +1,5 @@
 import type { BrowserRouteContext, ProfileContext } from "../server-context.js";
+import { extractBrowserProfileName } from "../profiles.js";
 import type { BrowserRequest, BrowserResponse } from "./types.js";
 import { parseBooleanValue } from "../../utils/boolean.js";
 
@@ -12,16 +13,27 @@ export function getProfileContext(
 ): ProfileContext | { error: string; status: number } {
   let profileName: string | undefined;
 
+  const resolveProfileName = (raw: unknown): string | undefined => {
+    if (typeof raw !== "string") {
+      return undefined;
+    }
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+    return extractBrowserProfileName(trimmed) ?? trimmed;
+  };
+
   // Check query string first (works for GET and POST)
   if (typeof req.query.profile === "string") {
-    profileName = req.query.profile.trim() || undefined;
+    profileName = resolveProfileName(req.query.profile);
   }
 
   // Fall back to body for POST requests
   if (!profileName && req.body && typeof req.body === "object") {
     const body = req.body as Record<string, unknown>;
     if (typeof body.profile === "string") {
-      profileName = body.profile.trim() || undefined;
+      profileName = resolveProfileName(body.profile);
     }
   }
 
