@@ -53,7 +53,7 @@ async function run() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
     console.log(
-      "Usage: node create-bundle.mjs --text <caption> --fb <caption> --ig <caption> --tt <caption> --x <caption>",
+      "Usage: node create-bundle.mjs --text <caption> --fb <caption> --ig <caption> --tt <caption> --x <caption> --first-comment <text>",
     );
     process.exit(0);
   }
@@ -78,23 +78,59 @@ async function run() {
   });
 
   console.log("Selecting all accounts...");
-  await clickByText(page, "Select All");
+  const selectAll = page.getByText(/Select All \(\d+\)/i);
+  await selectAll.click();
+
+  console.log("Entering global text...");
+  if (args.text) {
+    const editor = page.locator(".ql-editor").first();
+    await editor.fill(args.text);
+  }
 
   console.log("Toggling customization...");
-  await clickByText(page, "Customize for each network");
+  const customizeToggle = page.locator("label").filter({ hasText: "Customize for each network" });
+  await customizeToggle.click();
 
-  // TODO: Fill in the editor fields.
-  // args.text for global, plus args.fb/args.ig/args.tt/args.x for per-network overrides.
+  const networks = [
+    { key: "fb", label: "Facebook", selector: "Facebook Options" },
+    { key: "ig", label: "Instagram", selector: "Instagram Options" },
+    { key: "tt", label: "TikTok", selector: "TikTok Options" },
+    { key: "x", label: "X", selector: "X Options" },
+  ];
+
+  for (const net of networks) {
+    if (args[net.key]) {
+      console.log(`Customizing ${net.label}...`);
+      await page.getByRole("button", { name: net.label, exact: false }).click();
+      const netEditor = page.locator(".ql-editor").first();
+      await netEditor.fill(args[net.key]);
+
+      if (args["first-comment"] && net.key !== "x") {
+        console.log(`Setting first comment for ${net.label}...`);
+        const optionsHeader = page.getByRole("button", { name: net.selector, exact: false });
+        if ((await optionsHeader.getAttribute("aria-expanded")) === "false") {
+          await optionsHeader.click();
+        }
+        const commentBox = page.getByPlaceholder(/first comment/i);
+        if ((await commentBox.count()) > 0) {
+          await commentBox.fill(args["first-comment"]);
+        }
+      }
+    }
+  }
 
   console.log("Saving as Team Shared Draft...");
-  await clickByText(page, "Save Draft");
-  await clickByText(page, "Team Sharing");
+  await page.getByRole("button", { name: "Save Draft", exact: false }).click();
+  const teamSharing = page.getByText("Team Sharing");
+  if ((await teamSharing.count()) > 0) {
+    await teamSharing.click();
+  }
 
   console.log("Finalizing save...");
-  await clickByText(page, "Save Draft");
+  await page.getByRole("button", { name: "Save Draft", exact: false }).last().click();
 
   await browser.close();
-  console.log("Bundle saved successfully!");
+  console.log("Bundle saved successfully with comments and customization!");
 }
 
 run().catch((err) => {
