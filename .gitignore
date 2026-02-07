@@ -64,7 +64,6 @@ apps/ios/*.mobileprovision
 
 # Local untracked files
 .local/
-.vscode/
 IDENTITY.md
 USER.md
 .tgz
@@ -74,3 +73,8 @@ LightsailDefaultKey-us-east-2.pem
 
 # local tooling
 .serena/
+
+# Agent credentials and memory (NEVER COMMIT)
+memory/
+.agent/*.json
+!.agent/workflows/
