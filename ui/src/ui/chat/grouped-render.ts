@@ -245,7 +245,8 @@ function renderGroupedMessage(
     opts.showReasoning && role === "assistant" ? extractThinkingCached(message) : null;
   const markdownBase = extractedText?.trim() ? extractedText : null;
   const reasoningMarkdown = extractedThinking ? formatReasoningMarkdown(extractedThinking) : null;
-  const markdown = markdownBase;
+  const hideToolText = opts.suppressToolCards && hasToolCards && isToolResult;
+  const markdown = hideToolText ? null : markdownBase;
   const canCopyMarkdown = role === "assistant" && Boolean(markdown?.trim());
 
   const bubbleClasses = [

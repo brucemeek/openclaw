@@ -163,7 +163,10 @@ describe("message-normalizer", () => {
     it("returns false for other roles", () => {
       expect(isToolResultMessage({ role: "user" })).toBe(false);
       expect(isToolResultMessage({ role: "assistant" })).toBe(false);
-      expect(isToolResultMessage({ role: "tool" })).toBe(false);
+    });
+
+    it("returns true for tool role", () => {
+      expect(isToolResultMessage({ role: "tool" })).toBe(true);
     });
 
     it("returns false for missing role", () => {

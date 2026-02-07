@@ -86,5 +86,5 @@ export function normalizeRoleForGrouping(role: string): string {
 export function isToolResultMessage(message: unknown): boolean {
   const m = message as Record<string, unknown>;
   const role = typeof m.role === "string" ? m.role.toLowerCase() : "";
-  return role === "toolresult" || role === "tool_result";
+  return role === "toolresult" || role === "tool_result" || role === "tool";
 }

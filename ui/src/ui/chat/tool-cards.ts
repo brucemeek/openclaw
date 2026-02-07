@@ -46,6 +46,7 @@ export function extractToolCards(message: unknown): ToolCard[] {
     const name =
       (typeof m.toolName === "string" && m.toolName) ||
       (typeof m.tool_name === "string" && m.tool_name) ||
+      (typeof m.name === "string" && m.name) ||
       "tool";
     const text = extractTextCached(message) ?? undefined;
     cards.push({ kind: "result", name, text });
