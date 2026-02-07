@@ -152,6 +152,62 @@
   z-index: 10;
 }
 
+/* Chat status row (agent working indicator) */
+.chat-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.chat-status__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  line-height: 1.2;
+}
+
+.chat-status__icon {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+}
+
+.chat-status__icon svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chat-status__label {
+  white-space: nowrap;
+}
+
+.chat-status__item[data-status="stream"] .chat-status__icon,
+.chat-status__item[data-status="sending"] .chat-status__icon {
+  animation: chat-status-spin 1s linear infinite;
+}
+
+@keyframes chat-status-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Image attachments preview */
 .chat-attachments {
   display: inline-flex;

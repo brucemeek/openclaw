@@ -10,7 +10,7 @@ import {
   formatReasoningMarkdown,
 } from "./message-extract.ts";
 import { isToolResultMessage, normalizeRoleForGrouping } from "./message-normalizer.ts";
-import { extractToolCards, renderToolCardSidebar } from "./tool-cards.ts";
+import { extractToolCards, renderToolCardSidebar, renderToolCardStack } from "./tool-cards.ts";
 
 type ImageBlock = {
   url: string;
@@ -127,6 +127,9 @@ export function renderMessageGroup(
     minute: "2-digit",
   });
 
+  const toolCards = collectToolCards(group.messages);
+  const shouldStackTools = toolCards.length > 0;
+
   return html`
     <div class="chat-group ${roleClass}">
       ${renderAvatar(group.role, {
@@ -140,10 +143,12 @@ export function renderMessageGroup(
             {
               isStreaming: group.isStreaming && index === group.messages.length - 1,
               showReasoning: opts.showReasoning,
+              suppressToolCards: shouldStackTools,
             },
             opts.onOpenSidebar,
           ),
         )}
+        ${shouldStackTools ? renderToolCardStack(toolCards, opts.onOpenSidebar) : nothing}
         <div class="chat-group-footer">
           <span class="chat-sender-name">${who}</span>
           <span class="chat-group-timestamp">${timestamp}</span>
@@ -217,7 +222,7 @@ function renderMessageImages(images: ImageBlock[]) {
 
 function renderGroupedMessage(
   message: unknown,
-  opts: { isStreaming: boolean; showReasoning: boolean },
+  opts: { isStreaming: boolean; showReasoning: boolean; suppressToolCards?: boolean },
   onOpenSidebar?: (content: string) => void,
 ) {
   const m = message as Record<string, unknown>;
@@ -231,6 +236,7 @@ function renderGroupedMessage(
 
   const toolCards = extractToolCards(message);
   const hasToolCards = toolCards.length > 0;
+  const renderToolCards = hasToolCards && !opts.suppressToolCards;
   const images = extractImages(message);
   const hasImages = images.length > 0;
 
@@ -251,11 +257,11 @@ function renderGroupedMessage(
     .filter(Boolean)
     .join(" ");
 
-  if (!markdown && hasToolCards && isToolResult) {
+  if (!markdown && renderToolCards && isToolResult) {
     return html`${toolCards.map((card) => renderToolCardSidebar(card, onOpenSidebar))}`;
   }
 
-  if (!markdown && !hasToolCards && !hasImages) {
+  if (!markdown && !renderToolCards && !hasImages) {
     return nothing;
   }
 
@@ -275,7 +281,18 @@ function renderGroupedMessage(
           ? html`<div class="chat-text">${unsafeHTML(toSanitizedMarkdownHtml(markdown))}</div>`
           : nothing
       }
-      ${toolCards.map((card) => renderToolCardSidebar(card, onOpenSidebar))}
+      ${renderToolCards ? toolCards.map((card) => renderToolCardSidebar(card, onOpenSidebar)) : nothing}
     </div>
   `;
+}
+
+function collectToolCards(messages: Array<{ message: unknown }>): ReturnType<typeof extractToolCards> {
+  const collected: ReturnType<typeof extractToolCards> = [];
+  for (const item of messages) {
+    const cards = extractToolCards(item.message);
+    if (cards.length > 0) {
+      collected.push(...cards);
+    }
+  }
+  return collected;
 }

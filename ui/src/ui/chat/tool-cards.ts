@@ -7,6 +7,12 @@ import { extractTextCached } from "./message-extract.ts";
 import { isToolResultMessage } from "./message-normalizer.ts";
 import { formatToolOutputForSidebar, getTruncatedPreview } from "./tool-helpers.ts";
 
+type ToolCardSummary = {
+  count: number;
+  preview: string | null;
+  hasOutput: boolean;
+};
+
 export function extractToolCards(message: unknown): ToolCard[] {
   const m = message as Record<string, unknown>;
   const content = normalizeContent(m.content);
@@ -118,6 +124,118 @@ export function renderToolCardSidebar(card: ToolCard, onOpenSidebar?: (content: 
       ${showInline ? html`<div class="chat-tool-card__inline mono">${card.text}</div>` : nothing}
     </div>
   `;
+}
+
+export function renderToolCardStack(cards: ToolCard[], onOpenSidebar?: (content: string) => void) {
+  if (cards.length === 0) {
+    return nothing;
+  }
+
+  const summary = summarizeToolCards(cards);
+  const title = summary.count === 1 ? "Tool call" : `Tool calls (${summary.count})`;
+
+  return html`
+    <details class="chat-tool-stack">
+      <summary class="chat-tool-stack__summary">
+        <span class="chat-tool-stack__title">
+          <span class="chat-tool-stack__icon">${icons.wrench}</span>
+          <span>${title}</span>
+        </span>
+        ${summary.preview ? html`<span class="chat-tool-stack__preview">${summary.preview}</span>` : nothing}
+        <span class="chat-tool-stack__meta">
+          ${summary.hasOutput ? "Output ready" : "No output"}
+        </span>
+        <span class="chat-tool-stack__chevron">${icons.arrowDown}</span>
+      </summary>
+      <div class="chat-tool-stack__body">
+        ${cards.map((card) => renderToolRow(card, onOpenSidebar))}
+      </div>
+    </details>
+  `;
+}
+
+function renderToolRow(card: ToolCard, onOpenSidebar?: (content: string) => void) {
+  const display = resolveToolDisplay({ name: card.name, args: card.args });
+  const detail = formatToolDetail(display);
+  const hasText = Boolean(card.text?.trim());
+  const canClick = Boolean(onOpenSidebar);
+
+  const handleClick = canClick
+    ? () => {
+        if (hasText) {
+          onOpenSidebar!(formatToolOutputForSidebar(card.text!));
+          return;
+        }
+        const info = `## ${display.label}\n\n${
+          detail ? `**Command:** \`${detail}\`\n\n` : ""
+        }*No output - tool completed successfully.*`;
+        onOpenSidebar!(info);
+      }
+    : undefined;
+
+  const preview = hasText ? getTruncatedPreview(card.text!) : null;
+  const statusLabel = card.kind === "call" ? "Called" : "Completed";
+
+  return html`
+    <div
+      class="chat-tool-row ${canClick ? "chat-tool-row--clickable" : ""}"
+      @click=${handleClick}
+      role=${canClick ? "button" : nothing}
+      tabindex=${canClick ? "0" : nothing}
+      @keydown=${
+        canClick
+          ? (e: KeyboardEvent) => {
+              if (e.key !== "Enter" && e.key !== " ") {
+                return;
+              }
+              e.preventDefault();
+              handleClick?.();
+            }
+          : nothing
+      }
+    >
+      <div class="chat-tool-row__header">
+        <span class="chat-tool-row__title">
+          <span class="chat-tool-row__icon">${icons[display.icon]}</span>
+          <span class="chat-tool-row__label">${display.label}</span>
+        </span>
+        ${detail ? html`<span class="chat-tool-row__detail">${detail}</span>` : nothing}
+        <span class="chat-tool-row__status">${statusLabel}</span>
+      </div>
+      ${preview ? html`<div class="chat-tool-row__preview mono">${preview}</div>` : nothing}
+    </div>
+  `;
+}
+
+function summarizeToolCards(cards: ToolCard[]): ToolCardSummary {
+  const callCount = cards.filter((card) => card.kind === "call").length;
+  const resultCount = cards.filter((card) => card.kind === "result").length;
+  const count = callCount > 0 ? callCount : resultCount > 0 ? resultCount : cards.length;
+  const hasOutput = cards.some((card) => Boolean(card.text?.trim()));
+
+  const seen = new Set<string>();
+  const labels: string[] = [];
+  for (const card of cards) {
+    const label = resolveToolDisplay({ name: card.name, args: card.args }).label;
+    if (seen.has(label)) {
+      continue;
+    }
+    seen.add(label);
+    labels.push(label);
+  }
+  const preview = formatToolPreview(labels);
+
+  return { count, preview, hasOutput };
+}
+
+function formatToolPreview(labels: string[]): string | null {
+  if (labels.length === 0) {
+    return null;
+  }
+  if (labels.length <= 2) {
+    return labels.join(", ");
+  }
+  return `${labels[0]}, ${labels[1]} +${labels.length - 2}`;
 }
 
 function normalizeContent(content: unknown): Array<Record<string, unknown>> {

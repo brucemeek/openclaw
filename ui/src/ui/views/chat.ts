@@ -10,6 +10,7 @@ import {
   renderStreamingGroup,
 } from "../chat/grouped-render.ts";
 import { normalizeMessage, normalizeRoleForGrouping } from "../chat/message-normalizer.ts";
+import { extractToolCards } from "../chat/tool-cards.ts";
 import { icons } from "../icons.ts";
 import { renderMarkdownSidebar } from "./markdown-sidebar.ts";
 import "../components/resizable-divider.ts";
@@ -106,6 +107,64 @@ function renderCompactionIndicator(status: CompactionIndicatorStatus | null | un
   }
 
   return nothing;
+}
+
+type ToolRunSummary = {
+  runningCount: number;
+};
+
+function getToolRunSummary(toolMessages: unknown[]): ToolRunSummary {
+  let runningCount = 0;
+
+  for (const message of toolMessages) {
+    const cards = extractToolCards(message);
+    if (cards.length === 0) {
+      continue;
+    }
+    const callCount = cards.filter((card) => card.kind === "call").length;
+    const hasResult = cards.some((card) => card.kind === "result");
+    if (callCount > 0 && !hasResult) {
+      runningCount += callCount;
+    }
+  }
+
+  return { runningCount };
+}
+
+function renderChatStatus(props: ChatProps) {
+  const toolSummary = getToolRunSummary(Array.isArray(props.toolMessages) ? props.toolMessages : []);
+  const statusItems: Array<{ key: string; label: string; icon: typeof icons[keyof typeof icons] }> = [];
+
+  if (toolSummary.runningCount > 0) {
+    statusItems.push({
+      key: "tools",
+      label: `Running ${toolSummary.runningCount} tool${toolSummary.runningCount === 1 ? "" : "s"}...`,
+      icon: icons.wrench,
+    });
+  }
+
+  if (props.stream !== null) {
+    statusItems.push({ key: "stream", label: "Streaming reply...", icon: icons.loader });
+  } else if (props.sending) {
+    statusItems.push({ key: "sending", label: "Waiting for response...", icon: icons.loader });
+  }
+
+  if (statusItems.length === 0) {
+    statusItems.push({ key: "ready", label: "Ready", icon: icons.circle });
+  }
+
+  return html`
+    <div class="chat-status" role="status" aria-live="polite">
+      ${statusItems.map(
+        (item) => html`
+          <span class="chat-status__item" data-status=${item.key}>
+            <span class="chat-status__icon">${item.icon}</span>
+            <span class="chat-status__label">${item.label}</span>
+          </span>
+        `,
+      )}
+    </div>
+  `;
 }
 
 function generateAttachmentId(): string {
@@ -421,6 +480,7 @@ export function renderChat(props: ChatProps) {
       }
 
       <div class="chat-compose">
+        ${renderChatStatus(props)}
         ${renderAttachmentPreview(props)}
         <div class="chat-compose__row">
           <label class="field chat-compose__field">
