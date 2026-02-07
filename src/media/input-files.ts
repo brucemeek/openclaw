@@ -226,7 +226,10 @@ function clampText(text: string, maxChars: number): string {
 }
 
 function stripHtmlTags(value: string): string {
-  return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return value
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 async function extractPdfContent(params: {

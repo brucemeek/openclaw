@@ -10,6 +10,19 @@ import { resolveAgentTimeoutMs } from "../../agents/timeout.js";
 import { dispatchInboundMessage } from "../../auto-reply/dispatch.js";
 import { createReplyDispatcher } from "../../auto-reply/reply/reply-dispatcher.js";
 import { createReplyPrefixOptions } from "../../channels/reply-prefix.js";
+import {
+  DEFAULT_INPUT_FILE_MAX_BYTES,
+  DEFAULT_INPUT_FILE_MIMES,
+  DEFAULT_INPUT_MAX_REDIRECTS,
+  DEFAULT_INPUT_TIMEOUT_MS,
+  DEFAULT_INPUT_PDF_MAX_PAGES,
+  DEFAULT_INPUT_PDF_MAX_PIXELS,
+  DEFAULT_INPUT_PDF_MIN_TEXT_CHARS,
+  extractFileContentFromSource,
+  normalizeMimeList,
+  type InputFileLimits,
+} from "../../media/input-files.js";
+import { detectMime } from "../../media/mime.js";
 import { resolveSendPolicy } from "../../sessions/send-policy.js";
 import { INTERNAL_MESSAGE_CHANNEL } from "../../utils/message-channel.js";
 import {
@@ -39,19 +52,6 @@ import {
 } from "../session-utils.js";
 import { formatForLog } from "../ws-log.js";
 import { injectTimestamp, timestampOptsFromConfig } from "./agent-timestamp.js";
-import { detectMime } from "../../media/mime.js";
-import {
-  DEFAULT_INPUT_FILE_MAX_BYTES,
-  DEFAULT_INPUT_FILE_MIMES,
-  DEFAULT_INPUT_MAX_REDIRECTS,
-  DEFAULT_INPUT_TIMEOUT_MS,
-  DEFAULT_INPUT_PDF_MAX_PAGES,
-  DEFAULT_INPUT_PDF_MAX_PIXELS,
-  DEFAULT_INPUT_PDF_MIN_TEXT_CHARS,
-  extractFileContentFromSource,
-  normalizeMimeList,
-  type InputFileLimits,
-} from "../../media/input-files.js";
 
 type TranscriptAppendResult = {
   ok: boolean;
@@ -364,7 +364,8 @@ async function processChatAttachments(params: {
     const label = att.fileName || att.type || `attachment-${idx + 1}`;
     const parsed = parseAttachmentBase64(label, att.content, MAX_FILE_ATTACHMENT_BYTES);
     const providedMimeRaw = normalizeMime(att.mimeType);
-    const providedMime = providedMimeRaw === "application/octet-stream" ? undefined : providedMimeRaw;
+    const providedMime =
+      providedMimeRaw === "application/octet-stream" ? undefined : providedMimeRaw;
     const sniffedMime = normalizeMime(await sniffMimeFromBase64(parsed.base64));
     const extensionMime = resolveMimeFromFilename(att.fileName);
     const effectiveMime = sniffedMime ?? providedMime ?? extensionMime;

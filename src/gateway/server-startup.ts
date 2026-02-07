@@ -18,11 +18,11 @@ import { loadInternalHooks } from "../hooks/loader.js";
 import { isTruthyEnvValue } from "../infra/env.js";
 import { type PluginServicesHandle, startPluginServices } from "../plugins/services.js";
 import { startBrowserControlServerIfEnabled } from "./server-browser.js";
-import { startGatewaySyncRunner, type GatewaySyncRunner } from "./state-sync.js";
 import {
   scheduleRestartSentinelWake,
   shouldWakeFromRestartSentinel,
 } from "./server-restart-sentinel.js";
+import { startGatewaySyncRunner, type GatewaySyncRunner } from "./state-sync.js";
 
 export async function startGatewaySidecars(params: {
   cfg: ReturnType<typeof loadConfig>;

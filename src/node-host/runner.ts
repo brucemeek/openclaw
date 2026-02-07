@@ -5,11 +5,11 @@ import fsPromises from "node:fs/promises";
 import path from "node:path";
 import { resolveAgentConfig } from "../agents/agent-scope.js";
 import { resolveBrowserConfig } from "../browser/config.js";
-import { extractBrowserProfileName } from "../browser/profiles.js";
 import {
   createBrowserControlContext,
   startBrowserControlServiceFromConfig,
 } from "../browser/control-service.js";
+import { extractBrowserProfileName } from "../browser/profiles.js";
 import { createBrowserRouteDispatcher } from "../browser/routes/dispatcher.js";
 import { loadConfig } from "../config/config.js";
 import { GatewayClient } from "../gateway/client.js";

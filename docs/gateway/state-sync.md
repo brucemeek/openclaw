@@ -67,9 +67,7 @@ If your workspace lives outside the state dir, add a mapping:
     sync: {
       enabled: true,
       remote: { sshTarget: "ec2-user@gateway-host", path: "/var/lib/openclaw" },
-      mappings: [
-        { local: "/data/openclaw-workspace", remote: "/data/openclaw-workspace" },
-      ],
+      mappings: [{ local: "/data/openclaw-workspace", remote: "/data/openclaw-workspace" }],
     },
   },
 }

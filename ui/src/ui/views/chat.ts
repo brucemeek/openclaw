@@ -132,8 +132,14 @@ function getToolRunSummary(toolMessages: unknown[]): ToolRunSummary {
 }
 
 function renderChatStatus(props: ChatProps) {
-  const toolSummary = getToolRunSummary(Array.isArray(props.toolMessages) ? props.toolMessages : []);
-  const statusItems: Array<{ key: string; label: string; icon: typeof icons[keyof typeof icons] }> = [];
+  const toolSummary = getToolRunSummary(
+    Array.isArray(props.toolMessages) ? props.toolMessages : [],
+  );
+  const statusItems: Array<{
+    key: string;
+    label: string;
+    icon: (typeof icons)[keyof typeof icons];
+  }> = [];
 
   if (toolSummary.runningCount > 0) {
     statusItems.push({

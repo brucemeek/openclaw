@@ -286,7 +286,9 @@ function renderGroupedMessage(
   `;
 }
 
-function collectToolCards(messages: Array<{ message: unknown }>): ReturnType<typeof extractToolCards> {
+function collectToolCards(
+  messages: Array<{ message: unknown }>,
+): ReturnType<typeof extractToolCards> {
   const collected: ReturnType<typeof extractToolCards> = [];
   for (const item of messages) {
     const cards = extractToolCards(item.message);

@@ -1,7 +1,7 @@
 ---
 name: social-champ
 description: Automate Social Champ publishing via the OpenClaw browser (CDP connection).
-metadata: {"clawdbot":{"emoji":"🏆","requires":{"bins":["node"]}}}
+metadata: { "clawdbot": { "emoji": "🏆", "requires": { "bins": ["node"] } } }
 ---
 
 # Social Champ Browser Skill

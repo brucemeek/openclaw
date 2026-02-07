@@ -1,7 +1,6 @@
-import path from "node:path";
 import type { OpenClawConfig } from "../config/config.js";
+import type { GatewaySyncDirection } from "../config/types.gateway.js";
 import { loadConfig } from "../config/config.js";
-import type { GatewaySyncConfig, GatewaySyncDirection } from "../config/types.gateway.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { runCommandWithTimeout } from "../process/exec.js";
 import { CONFIG_DIR, resolveUserPath } from "../utils.js";
@@ -94,7 +93,8 @@ function resolveSyncConfig(cfg: OpenClawConfig): SyncResolvedConfig | null {
       sshTarget: sync.remote?.sshTarget?.trim() || undefined,
       path: remotePath,
       sshIdentity: sync.remote?.sshIdentity?.trim() || undefined,
-      sshPort: sync.remote?.sshPort && Number.isFinite(sync.remote.sshPort) ? sync.remote.sshPort : 22,
+      sshPort:
+        sync.remote?.sshPort && Number.isFinite(sync.remote.sshPort) ? sync.remote.sshPort : 22,
       sshOptions: sync.remote?.sshOptions ? sync.remote.sshOptions : [],
     },
     local: { path: localPath },
@@ -177,15 +177,17 @@ async function runRsync(params: {
   const localPath = normalizeLocalPath(params.mapping.local);
   const remotePath = ensureTrailingSlash(params.mapping.remote.replace(/\\/g, "/"));
   const remoteTarget = `${params.cfg.remote.sshTarget}:${remotePath}`;
-  const source =
-    params.direction === "push" ? ensureTrailingSlash(localPath) : remoteTarget;
+  const source = params.direction === "push" ? ensureTrailingSlash(localPath) : remoteTarget;
   const dest = params.direction === "push" ? remoteTarget : ensureTrailingSlash(localPath);
-  const argv = [params.cfg.rsyncPath, ...buildRsyncArgs({
-    cfg: params.cfg,
-    source,
-    dest,
-    sshCommand,
-  })];
+  const argv = [
+    params.cfg.rsyncPath,
+    ...buildRsyncArgs({
+      cfg: params.cfg,
+      source,
+      dest,
+      sshCommand,
+    }),
+  ];
   const result = await runCommandWithTimeout(argv, { timeoutMs: params.cfg.timeoutMs });
   if (result.code !== 0) {
     const details = result.stderr.trim() || result.stdout.trim();
@@ -279,13 +281,13 @@ export function startGatewaySyncRunner(cfgAtStart: OpenClawConfig): GatewaySyncR
       await inFlight;
     } finally {
       inFlight = null;
-      if (pending) {
-        pending = false;
-        schedule(0);
-        return;
-      }
-      schedule(latest.intervalMs);
     }
+    if (pending) {
+      pending = false;
+      schedule(0);
+      return;
+    }
+    schedule(latest.intervalMs);
   };
 
   schedule(initial.initialDelayMs);

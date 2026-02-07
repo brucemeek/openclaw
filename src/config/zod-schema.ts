@@ -507,7 +507,9 @@ export const OpenClawSchema = z
         sync: z
           .object({
             enabled: z.boolean().optional(),
-            direction: z.union([z.literal("push"), z.literal("pull"), z.literal("both")]).optional(),
+            direction: z
+              .union([z.literal("push"), z.literal("pull"), z.literal("both")])
+              .optional(),
             intervalMinutes: z.number().int().positive().optional(),
             initialDelayMs: z.number().int().nonnegative().optional(),
             timeoutMs: z.number().int().positive().optional(),

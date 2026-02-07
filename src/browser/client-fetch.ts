@@ -144,7 +144,7 @@ export async function fetchBrowserJson<T>(
     }
     if (!absolute) {
       if (isTimeoutLike(msg)) {
-        throw new Error(`Browser request timed out after ${timeoutMs}ms.`);
+        throw new Error(`Browser request timed out after ${timeoutMs}ms.`, { cause: err });
       }
       throw err instanceof Error ? err : new Error(msg);
     }
