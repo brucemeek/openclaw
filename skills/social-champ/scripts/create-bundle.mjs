@@ -101,6 +101,7 @@ async function run() {
   for (const net of networks) {
     if (args[net.key]) {
       console.log(`Customizing ${net.label}...`);
+      // Click the network icon/tab to switch view
       await page.getByRole("button", { name: net.label, exact: false }).click();
       const netEditor = page.locator(".ql-editor").first();
       await netEditor.fill(args[net.key]);
@@ -108,6 +109,7 @@ async function run() {
       if (args["first-comment"] && net.key !== "x") {
         console.log(`Setting first comment for ${net.label}...`);
         const optionsHeader = page.getByRole("button", { name: net.selector, exact: false });
+        // Expand options if needed
         if ((await optionsHeader.getAttribute("aria-expanded")) === "false") {
           await optionsHeader.click();
         }
@@ -121,6 +123,7 @@ async function run() {
 
   console.log("Saving as Team Shared Draft...");
   await page.getByRole("button", { name: "Save Draft", exact: false }).click();
+  // Depending on the dropdown/modal, might need to click "Team Sharing"
   const teamSharing = page.getByText("Team Sharing");
   if ((await teamSharing.count()) > 0) {
     await teamSharing.click();
