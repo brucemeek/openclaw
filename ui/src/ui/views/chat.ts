@@ -612,6 +612,19 @@ function groupMessages(items: ChatItem[]): Array<ChatItem | MessageGroup> {
     const role = normalizeRoleForGrouping(normalized.role);
     const timestamp = normalized.timestamp || Date.now();
 
+    if (role === "tool") {
+      const currentRole = currentGroup ? normalizeRoleForGrouping(currentGroup.role) : null;
+      if (currentGroup && currentRole === "assistant") {
+        currentGroup.messages.push({ message: item.message, key: item.key });
+        continue;
+      }
+      const last = result[result.length - 1];
+      if (last && last.kind === "group" && normalizeRoleForGrouping(last.role) === "assistant") {
+        last.messages.push({ message: item.message, key: item.key });
+        continue;
+      }
+    }
+
     if (!currentGroup || currentGroup.role !== role) {
       if (currentGroup) {
         result.push(currentGroup);
