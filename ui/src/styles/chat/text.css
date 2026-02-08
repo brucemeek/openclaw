@@ -74,6 +74,26 @@
   padding: 0;
 }
 
+.chat-text :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.chat-text :where(th, td) {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.chat-text :where(th) {
+  background: var(--panel);
+  font-weight: 600;
+}
+
 .chat-text :where(blockquote) {
   border-left: 3px solid var(--border-strong);
   padding-left: 12px;
@@ -115,6 +135,14 @@
 :root[data-theme="light"] .chat-text :where(pre) {
   background: rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .chat-text :where(table) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:root[data-theme="light"] .chat-text :where(th) {
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .chat-text :where(hr) {

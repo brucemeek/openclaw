@@ -19,6 +19,40 @@ const ENVELOPE_CHANNELS = [
 const textCache = new WeakMap<object, string | null>();
 const thinkingCache = new WeakMap<object, string | null>();
 
+function extractTextFromBlock(block: unknown): string | null {
+  if (typeof block === "string") {
+    return block;
+  }
+  if (!block || typeof block !== "object") {
+    return null;
+  }
+  const item = block as Record<string, unknown>;
+  const kind = typeof item.type === "string" ? item.type.toLowerCase() : "text";
+  if (kind !== "text") {
+    return null;
+  }
+
+  if (typeof item.text === "string") {
+    return item.text;
+  }
+  if (item.text && typeof item.text === "object") {
+    const value = (item.text as Record<string, unknown>).value;
+    if (typeof value === "string") {
+      return value;
+    }
+  }
+  if (typeof item.content === "string") {
+    return item.content;
+  }
+  if (item.content && typeof item.content === "object") {
+    const value = (item.content as Record<string, unknown>).value;
+    if (typeof value === "string") {
+      return value;
+    }
+  }
+  return null;
+}
+
 function looksLikeEnvelopeHeader(header: string): boolean {
   if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z\b/.test(header)) {
     return true;
@@ -51,13 +85,7 @@ export function extractText(message: unknown): string | null {
   }
   if (Array.isArray(content)) {
     const parts = content
-      .map((p) => {
-        const item = p as Record<string, unknown>;
-        if (item.type === "text" && typeof item.text === "string") {
-          return item.text;
-        }
-        return null;
-      })
+      .map((p) => extractTextFromBlock(p))
       .filter((v): v is string => typeof v === "string");
     if (parts.length > 0) {
       const joined = parts.join("\n");
@@ -137,13 +165,7 @@ export function extractRawText(message: unknown): string | null {
   }
   if (Array.isArray(content)) {
     const parts = content
-      .map((p) => {
-        const item = p as Record<string, unknown>;
-        if (item.type === "text" && typeof item.text === "string") {
-          return item.text;
-        }
-        return null;
-      })
+      .map((p) => extractTextFromBlock(p))
       .filter((v): v is string => typeof v === "string");
     if (parts.length > 0) {
       return parts.join("\n");

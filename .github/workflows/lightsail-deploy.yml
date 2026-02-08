@@ -32,6 +32,10 @@ jobs:
             git fetch "$REPO_URL" main
             git checkout main
             git merge --ff-only FETCH_HEAD
+            if [ -f deploy/lightsail/Caddyfile ]; then
+              sudo install -m 0644 deploy/lightsail/Caddyfile /etc/caddy/Caddyfile
+              sudo systemctl reload caddy
+            fi
             pnpm install --frozen-lockfile
             pnpm build
             pnpm ui:build

@@ -1,0 +1,27 @@
+agent.arcanedge.ai {
+    reverse_proxy 127.0.0.1:18789 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+
+        transport http {
+            keepalive 30s
+        }
+    }
+    encode gzip
+    log {
+        output file /var/log/caddy/agent.arcanedge.ai.log
+    }
+}
+
+crabwalk.arcanedge.ai {
+    basic_auth {
+        admin $2y$05$juw8q/fPZ5BmNFNztA5ZU.7tH7G4/mKenCwUGiaXYeLxxrzS1XX3K
+    }
+    reverse_proxy 127.0.0.1:3000
+    encode gzip
+    log {
+        output file /var/log/caddy/crabwalk.arcanedge.ai.log
+    }
+}

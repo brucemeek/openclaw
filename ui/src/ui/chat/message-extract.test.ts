@@ -23,6 +23,14 @@ describe("extractTextCached", () => {
     expect(extractTextCached(message)).toBe("plain text");
     expect(extractTextCached(message)).toBe("plain text");
   });
+
+  it("extracts nested text fields", () => {
+    const message = {
+      role: "assistant",
+      content: [{ text: { value: "Nested" } }, { type: "text", content: "Alt" }],
+    };
+    expect(extractTextCached(message)).toBe("Nested\nAlt");
+  });
 });
 
 describe("extractThinkingCached", () => {

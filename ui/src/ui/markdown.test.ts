@@ -28,4 +28,13 @@ describe("toSanitizedMarkdownHtml", () => {
     expect(html).toContain("<code");
     expect(html).toContain("console.log(1)");
   });
+
+  it("renders tables", () => {
+    const html = toSanitizedMarkdownHtml(
+      ["| Name | Value |", "| --- | --- |", "| Alpha | 1 |"].join("\n"),
+    );
+    expect(html).toContain("<table>");
+    expect(html).toContain("<th>");
+    expect(html).toContain("Alpha");
+  });
 });
