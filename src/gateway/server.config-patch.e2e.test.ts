@@ -193,6 +193,79 @@ describe("gateway config.patch", () => {
     expect(stored.channels?.telegram?.botToken).toBe("token-1");
   });
 
+  it("restores leaked sentinels before validation", async () => {
+    const setId = "req-set-sentinel-leak-1";
+    ws.send(
+      JSON.stringify({
+        type: "req",
+        id: setId,
+        method: "config.set",
+        params: {
+          raw: JSON.stringify({
+            gateway: { mode: "local" },
+            channels: { telegram: { botToken: "local" } },
+          }),
+        },
+      }),
+    );
+    const setRes = await onceMessage<{ ok: boolean }>(
+      ws,
+      (o) => o.type === "res" && o.id === setId,
+    );
+    expect(setRes.ok).toBe(true);
+
+    const getId = "req-get-sentinel-leak-1";
+    ws.send(
+      JSON.stringify({
+        type: "req",
+        id: getId,
+        method: "config.get",
+        params: {},
+      }),
+    );
+    const getRes = await onceMessage<{ ok: boolean; payload?: { hash?: string; raw?: string } }>(
+      ws,
+      (o) => o.type === "res" && o.id === getId,
+    );
+    expect(getRes.ok).toBe(true);
+    const baseHash = resolveConfigSnapshotHash({
+      hash: getRes.payload?.hash,
+      raw: getRes.payload?.raw,
+    });
+    expect(typeof baseHash).toBe("string");
+    const rawRedacted = getRes.payload?.raw;
+    expect(typeof rawRedacted).toBe("string");
+    expect(rawRedacted).toContain("__OPENCLAW_REDACTED__");
+    const parsedRedacted = JSON.parse(rawRedacted) as { gateway?: { mode?: string } };
+    expect(parsedRedacted.gateway?.mode).toBe("__OPENCLAW_REDACTED__");
+
+    const set2Id = "req-set-sentinel-leak-2";
+    ws.send(
+      JSON.stringify({
+        type: "req",
+        id: set2Id,
+        method: "config.set",
+        params: {
+          raw: rawRedacted,
+          baseHash,
+        },
+      }),
+    );
+    const set2Res = await onceMessage<{ ok: boolean }>(
+      ws,
+      (o) => o.type === "res" && o.id === set2Id,
+    );
+    expect(set2Res.ok).toBe(true);
+
+    const storedRaw = await fs.readFile(CONFIG_PATH, "utf-8");
+    const stored = JSON.parse(storedRaw) as {
+      gateway?: { mode?: string };
+      channels?: { telegram?: { botToken?: string } };
+    };
+    expect(stored.gateway?.mode).toBe("local");
+    expect(stored.channels?.telegram?.botToken).toBe("local");
+  });
+
   it("writes config, stores sentinel, and schedules restart", async () => {
     const setId = "req-set-restart";
     ws.send(

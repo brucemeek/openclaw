@@ -151,6 +151,7 @@ export function restoreRedactedValues(incoming: unknown, original: unknown): unk
       : {};
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(incoming as Record<string, unknown>)) {
+    // Restore redacted values for sensitive keys (primary case).
     if (isSensitiveKey(key) && value === REDACTED_SENTINEL) {
       if (!(key in orig)) {
         throw new Error(
@@ -158,6 +159,16 @@ export function restoreRedactedValues(incoming: unknown, original: unknown): unk
         );
       }
       result[key] = orig[key];
+    }
+    // Also restore redacted values that leaked to non-sensitive keys.
+    else if (value === REDACTED_SENTINEL) {
+      if (key in orig) {
+        result[key] = orig[key];
+      } else {
+        throw new Error(
+          `config write rejected: "${key}" contains redacted sentinel without original value`,
+        );
+      }
     } else if (typeof value === "object" && value !== null) {
       result[key] = restoreRedactedValues(value, orig[key]);
     } else {
