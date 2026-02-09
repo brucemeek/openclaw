@@ -67,6 +67,9 @@ apps/ios/*.mobileprovision
 IDENTITY.md
 USER.md
 .tgz
+TOOLS.md
+LightsailDefaultKey-us-east-2.pem
+backup/
 
 # local tooling
 .serena/
