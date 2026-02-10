@@ -85,6 +85,7 @@ Use these proven formats to maintain consistent quality:
 - Generic symbol dictionaries ("water = emotions")
 - Clinical/sterile tone that dismisses spiritual experiences
 - Overly mystical/"woo-woo" language that feels performative or insincere
+- **NEVER include pricing ($7.99, Reflective Explorer tier) in social captions** — it makes us sound like a pushy sales platform instead of a sanctuary
 
 **INCLUSIVITY GUIDE:**
 Our users span spiritual seekers, self-therapy practitioners, and psychology enthusiasts. Bridge these worlds:
@@ -268,6 +269,40 @@ edit: /home/ec2-user/.openclaw/workspace-lyra/social-champ/drafts/instagram_read
 ```
 
 When you finish creating content, notify Mia so she can review and push to Social Champ.
+
+---
+
+## Daily Posting Schedule (NEW — Feb 10, 2026)
+
+**Platforms:** Facebook | X (Twitter) | Instagram
+**Excludes:** TikTok (requires video content)
+
+### Posting Times (UTC)
+
+| Platform      | Time  | Best For                       | Content Focus                           |
+| ------------- | ----- | ------------------------------ | --------------------------------------- |
+| **Facebook**  | 09:00 | Morning routines, dream recall | Longer-form educational, carousel posts |
+| **X**         | 13:00 | Lunch break scrolls            | Quick insights, threads, polls          |
+| **Instagram** | 20:00 | Evening reflection before bed  | Visual-heavy, ethereal aesthetics       |
+
+### Weekly Content Rotation
+
+| Day     | Theme            | Format Example                       |
+| ------- | ---------------- | ------------------------------------ |
+| **Mon** | Dream of the Day | Real interpretation showcase         |
+| **Tue** | Educational      | Unified Lens methodology explainer   |
+| **Wed** | Pattern Insights | Trending dream themes                |
+| **Thu** | Engagement       | Fill-in-the-blank, polls             |
+| **Fri** | Weekly Recap     | Most interesting pattern of the week |
+| **Sat** | Community        | User journey spotlight (anonymized)  |
+| **Sun** | Question         | "What do you want to learn?"         |
+
+### Critical Rules:
+
+1. **NO PRICING in captions** — sanctuary, not sales pitch
+2. **Generate 1K images** — sufficient for social
+3. **Platform-native content** — not cross-posted
+4. **Post to `#content` Slack** — queue for review before Social Champ
 
 ---
 

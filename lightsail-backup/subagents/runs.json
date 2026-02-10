@@ -1,26 +1,4 @@
 {
   "version": 2,
-  "runs": {
-    "5bbfe8bb-4fc5-4965-bdc2-1a8c8b3e0b4f": {
-      "runId": "5bbfe8bb-4fc5-4965-bdc2-1a8c8b3e0b4f",
-      "childSessionKey": "agent:content-alchemist:subagent:4eb48451-4845-4f9d-82eb-ce4288d9e72b",
-      "requesterSessionKey": "agent:main:main",
-      "requesterOrigin": {
-        "channel": "webchat"
-      },
-      "requesterDisplayKey": "agent:main:main",
-      "task": "Create a social media post for Dream Oracle. \n\nUse the content-alchemist skills you have access to:\n1. Check your MISSION.md for brand voice guidelines and content templates\n2. Create ONE complete social media post (Instagram/X/TikTok/Facebook - choose the best platform for the content)\n3. Include:\n   - Platform-optimized copy\n   - Suggested hashtags\n   - Image prompt for Nano Banana (use nanobanana-pro skill) to generate a 4K glassmorphic visual\n4. Post your final content to the #content Slack channel using the message tool\n\nBrand: Dream Oracle (AI dream interpretation)\nTone: Ethereal, warm, curious, grounded — \"not prophetic, they're personal\"\nPrice: $7.99/mo Reflective Explorer tier\nKey value: Unified Lens methodology (Freud + Jung + Cognitive)\n\nGenerate the image and prepare the full post with caption, hashtags, and image file path. Then post to Slack channel C0AEB9UMHFE (#content).",
-      "cleanup": "keep",
-      "label": "lyra-social-post",
-      "createdAt": 1770755681988,
-      "startedAt": 1770755682470,
-      "archiveAtMs": 1770759281988,
-      "cleanupHandled": true,
-      "endedAt": 1770755819397,
-      "outcome": {
-        "status": "ok"
-      },
-      "cleanupCompletedAt": 1770755819772
-    }
-  }
+  "runs": {}
 }

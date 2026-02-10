@@ -3,8 +3,8 @@
     "deviceId": "ab78afe16d13b991fbd8867dcc7fd7e12552bdece8d731ba2583dd1fccedbfb7",
     "publicKey": "5UFUE8pA4geObRWz2B8wSbS3PY1f5qfiE8sIGlEX0-k",
     "platform": "linux",
-    "clientId": "cli",
-    "clientMode": "cli",
+    "clientId": "gateway-client",
+    "clientMode": "backend",
     "role": "operator",
     "roles": ["operator", "node"],
     "scopes": ["operator.admin", "operator.approvals", "operator.pairing"],
@@ -14,7 +14,7 @@
         "role": "operator",
         "scopes": ["operator.admin", "operator.approvals", "operator.pairing"],
         "createdAtMs": 1770244814743,
-        "lastUsedAtMs": 1770755820735
+        "lastUsedAtMs": 1770764189012
       },
       "node": {
         "token": "f41c9ab3ef964c0097287bfd920408e2",
@@ -25,7 +25,8 @@
       }
     },
     "createdAtMs": 1770244814743,
-    "approvedAtMs": 1770695205261
+    "approvedAtMs": 1770695205261,
+    "displayName": "agent"
   },
   "e3c0a741131ff6201902c57d0fe42e2d3909d4ef35f7cde6217578d56ad54299": {
     "deviceId": "e3c0a741131ff6201902c57d0fe42e2d3909d4ef35f7cde6217578d56ad54299",
@@ -63,7 +64,7 @@
         "role": "operator",
         "scopes": ["operator.admin", "operator.approvals", "operator.pairing"],
         "createdAtMs": 1770248823156,
-        "lastUsedAtMs": 1770755478792
+        "lastUsedAtMs": 1770764256331
       }
     },
     "createdAtMs": 1770248823156,

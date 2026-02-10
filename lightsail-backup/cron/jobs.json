@@ -291,6 +291,81 @@
         "channel": "slack",
         "to": "C0AD5LST0NQ"
       }
+    },
+    {
+      "id": "ad486c4d-67c0-4e6b-8e02-4250bf52a91f",
+      "agentId": "main",
+      "name": "Lyra: Daily Facebook Post",
+      "enabled": true,
+      "createdAtMs": 1770759846925,
+      "updatedAtMs": 1770759846925,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 9 * * *",
+        "tz": "UTC"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Create a Facebook post for Dream Oracle. Follow your MISSION.md daily content protocol for Facebook (09:00 UTC slot). Generate 1K image with Nano Banana, write platform-optimized caption without pricing, and prepare for Social Champ upload. Post draft to #content Slack channel when ready."
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "nextRunAtMs": 1770800400000
+      }
+    },
+    {
+      "id": "81b9d6e8-1bdc-41ff-a380-ed26ed416398",
+      "agentId": "main",
+      "name": "Lyra: Daily X Post",
+      "enabled": true,
+      "createdAtMs": 1770759847075,
+      "updatedAtMs": 1770759847075,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 13 * * *",
+        "tz": "UTC"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Create an X (Twitter) post for Dream Oracle. Follow your MISSION.md daily content protocol for X (13:00 UTC slot). Generate 1K image if needed, write platform-optimized caption (shorter, punchier), no pricing, and prepare for Social Champ upload. Post draft to #content Slack channel when ready."
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "nextRunAtMs": 1770814800000
+      }
+    },
+    {
+      "id": "bf3c6987-79b2-4a70-b5a1-5b94cdcb5085",
+      "agentId": "main",
+      "name": "Lyra: Daily Instagram Post",
+      "enabled": true,
+      "createdAtMs": 1770759847231,
+      "updatedAtMs": 1770759847231,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 20 * * *",
+        "tz": "UTC"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Create an Instagram post for Dream Oracle. Follow your MISSION.md daily content protocol for Instagram (20:00 UTC slot). Generate 1K image with Nano Banana (visual-heavy), write platform-optimized caption with hook, no pricing, and prepare for Social Champ upload. Post draft to #content Slack channel when ready."
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "nextRunAtMs": 1770840000000
+      }
     }
   ]
 }
