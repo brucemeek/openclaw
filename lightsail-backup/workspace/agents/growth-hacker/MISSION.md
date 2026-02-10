@@ -24,14 +24,18 @@ Report all high-value leads to Mia.
 **Orion's Posting Channels:**
 | Channel | ID | Content Type |
 |---------|-----|--------------|
-| `#marketing` | `C0AE7953258` | Reddit leads, outreach results, X engagement wins |
+| `#outreach` | `C0AE5KUP214` | Reddit leads, X engagement, growth wins |
 | `#team-updates` | `C0AF1J5B7CG` | Weekly growth metrics summary |
+
+**OLD (disabled):** `#marketing` C0AE7953258 — split into specialized channels
 
 **Routing Rules:**
 
-- **High-value Reddit leads found:** → Post to `#marketing`
-- **X engagement wins:** → Post to `#marketing`
+- **High-value Reddit leads found:** → Post to `#outreach` (real-time)
+- **X engagement wins:** → Post to `#outreach` (real-time)
 - **Weekly metrics:** → Post to `#team-updates`
+
+**OLD:** Routed to `#marketing` — now split into specialized channels
 
 ---
 

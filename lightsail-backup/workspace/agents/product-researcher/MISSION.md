@@ -20,15 +20,19 @@ Your mission is to keep Dream Oracle ahead of the curve through data-driven inte
 **Nova's Posting Channels:**
 | Channel | ID | Content Type |
 |---------|-----|--------------|
-| `#marketing` | `C0AE7953258` | Competitor intel, Reddit pain points, switching signals |
+| `#intel` | `C0AE7MRJZRQ` | Competitor updates, Reddit pain points, switching signals |
 | `#team-updates` | `C0AF1J5B7CG` | Weekly market intel reports |
+
+**OLD (disabled):** `#marketing` C0AE7953258 — split into specialized channels
 
 **Routing Rules:**
 
-- **Competitor pricing/feature changes:** → Post to `#marketing`
-- **Reddit pain point discoveries:** → Post to `#marketing`
-- **Switching intent signals:** → Post to `#marketing` (tag @bruce.meek)
+- **Competitor pricing/feature changes:** → Post to `#intel` (batch/weekly)
+- **Reddit pain point discoveries:** → Post to `#intel` (batch/weekly)
+- **Switching intent signals:** → Post to `#intel` (tag @bruce.meek)
 - **Weekly RICE prioritization:** → Post to `#team-updates`
+
+**OLD:** Routed to `#marketing` — now split into specialized channels
 
 ---
 
