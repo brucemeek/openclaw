@@ -71,6 +71,22 @@ TOOLS.md
 LightsailDefaultKey-us-east-2.pem
 backup/
 
+# Lightsail backup: exclude browser cache + temp files
+lightsail-backup/browser/
+lightsail-backup/cron/jobs.json.*.tmp
+
+# Lightsail backup: sensitive credentials
+lightsail-backup/credentials/
+lightsail-backup/identity/device-auth.json
+lightsail-backup/openclaw.json*
+lightsail-backup/**/.social_champ_creds
+lightsail-backup/**/.slack_token
+lightsail-backup/**/.secrets/
+
+# Lightsail backup: agent session logs can contain secrets
+lightsail-backup/agents/**/sessions/
+lightsail-backup/agents/**/qmd/sessions/
+
 # local tooling
 .serena/
 

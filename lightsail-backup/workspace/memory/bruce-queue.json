@@ -1,0 +1,57 @@
+{
+  "lastUpdated": "2026-02-09T04:45:00Z",
+  "items": [
+    {
+      "id": "bo-2026-02-07-001",
+      "agent": "Orion",
+      "title": "5 Reddit outreach drafts ready",
+      "context": "Tier-2 leads in r/Nightmares, r/LucidDreaming, r/Jung, r/Dreams. Drafts include Tri-Spine interpretations ready to post.",
+      "sourceFile": "memory/outreach-manifest-2026-02-07.md",
+      "urgency": "P1",
+      "status": "pending",
+      "blockedBy": ["Reddit API access approval pending (submitted 2026-02-09 16:20 UTC). After approval: Client ID + Secret needed for automated posting"],
+      "stakeholders": ["Orion", "Nova"],
+      "dateAdded": "2026-02-07T23:32:00Z",
+      "notes": "Orion drafted 5 responses. Manual posting possible now (browse to reddit.com), but automated access blocked. P1 because Reddit is our primary acquisition channel and timing matters for visibility."
+    },
+    {
+      "id": "bn-2026-02-09-001",
+      "agent": "Nova",
+      "title": "Reddit Intelligence monitoring approved",
+      "context": "Nova has set up monitoring on 4 subreddits with pain-point keyword tracking. Ready to activate.",
+      "sourceFile": "agents/product-researcher/MISSION.md",
+      "urgency": "P2",
+      "status": "pending",
+      "blockedBy": ["Nova needs guardrails on how often to search (rate limits)"],
+      "stakeholders": ["Nova", "Orion"],
+      "dateAdded": "2026-02-07T19:49:00Z",
+      "notes": "Nova's Reddit Intelligence is ready but needs timing protocol to avoid Brave Search rate limits (1 req/min). Recommend every-6-hour cron."
+    },
+    {
+      "id": "bk-2026-02-08-001",
+      "agent": "Koda",
+      "title": "Automated health check system deployed",
+      "context": "Cron jobs running every 6h with retry logic and proper Slack routing.",
+      "sourceFile": "agents/technical-sentinel/MISSION.md",
+      "urgency": "P3",
+      "status": "approved",
+      "blockedBy": [],
+      "stakeholders": ["Koda"],
+      "dateAdded": "2026-02-09T04:30:00Z",
+      "notes": "Auto-recovery + structured logging implemented. No action needed — FYI only."
+    },
+    {
+      "id": "bl-2026-02-08-001",
+      "agent": "Lyra",
+      "title": "Brand voice inclusivity update",
+      "context": "Removed fortune-teller positioning, added spiritual/psychology bridge language.",
+      "sourceFile": "agents/content-alchemist/MISSION.md",
+      "urgency": "P3",
+      "status": "approved",
+      "blockedBy": [],
+      "stakeholders": ["Lyra", "Mia"],
+      "dateAdded": "2026-02-08T15:49:00Z",
+      "notes": "Key phrases: 'Dreams aren't prophetic — they're personal.' Already approved via Slack conversation."
+    }
+  ]
+}

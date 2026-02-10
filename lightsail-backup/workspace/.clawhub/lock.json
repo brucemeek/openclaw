@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "skills": {
+    "jungian-psychologist": {
+      "version": "1.0.0",
+      "installedAt": 1770396024524
+    },
+    "copywriting": {
+      "version": "0.1.0",
+      "installedAt": 1770401096439
+    },
+    "reddit-insights": {
+      "version": "1.2.0",
+      "installedAt": 1770401098027
+    },
+    "marketing-mode": {
+      "version": "1.0.0",
+      "installedAt": 1770401100115
+    },
+    "closing-deals": {
+      "version": "0.1.0",
+      "installedAt": 1770401101779
+    },
+    "yc-cold-outreach": {
+      "version": "1.0.1",
+      "installedAt": 1770401103860
+    },
+    "content-writing-thought-leadership": {
+      "version": "1.0.0",
+      "installedAt": 1770401105858
+    },
+    "x-algorithm": {
+      "version": "1.0.2",
+      "installedAt": 1770401107936
+    },
+    "nanobanana-pro": {
+      "version": "1.0.0",
+      "installedAt": 1770401838025
+    },
+    "review-summarizer": {
+      "version": "1.0.0",
+      "installedAt": 1770418090519
+    },
+    "product-manager-toolkit": {
+      "version": "1.0.0",
+      "installedAt": 1770418092281
+    },
+    "search-reddit": {
+      "version": "1.0.0",
+      "installedAt": 1770418094156
+    },
+    "kimi-integration": {
+      "version": "1.0.0",
+      "installedAt": 1770492610476
+    }
+  }
+}
